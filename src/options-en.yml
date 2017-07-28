@@ -9,11 +9,16 @@ subcommands:
             - project:
                 value_name: PROJECT
                 index: 1
+                required: true
                 help: "Directory or '.cabal' file for the project"
             - prompt:
                 short: p
                 long: prompt
                 help: Require a prompt before any substitutions are made
+            - stash:
+                short: s
+                long: stash
+                help: Commit using git before making any changes
     - module:
         visible_alias: "m"
         about: Replace a module across a project.
@@ -21,8 +26,23 @@ subcommands:
             - project:
                 value_name: PROJECT
                 index: 1
+                required: true
                 help: "Directory or '.cabal' file for the project"
             - prompt:
                 short: p
                 long: prompt
                 help: Require a prompt before any substitutions are made
+            - stash:
+                short: s
+                long: stash
+                help: Commit using git before making any changes
+            - old:
+                value_name: OLD_MODULE
+                index: 2
+                required: true
+                help: Name of old module
+            - new:
+                value_name: NEW_MODULE
+                index: 3
+                required: true
+                help: Name of the new module
