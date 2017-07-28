@@ -1,0 +1,28 @@
+name: hask-replace
+author: Vanessa McHale <vanessa.mchale@reconfigure.io>
+about: Rename modules and functions across Haskell projects
+subcommands:
+    - function:
+        visible_alias: "f"
+        about: Replace a function across a project
+        args:
+            - project:
+                value_name: PROJECT
+                index: 1
+                help: "Directory or '.cabal' file for the project"
+            - prompt:
+                short: p
+                long: prompt
+                help: Require a prompt before any substitutions are made
+    - module:
+        visible_alias: "m"
+        about: Replace a module across a project.
+        args:
+            - project:
+                value_name: PROJECT
+                index: 1
+                help: "Directory or '.cabal' file for the project"
+            - prompt:
+                short: p
+                long: prompt
+                help: Require a prompt before any substitutions are made

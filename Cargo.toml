@@ -1,0 +1,19 @@
+[package]
+name = "haskell-replace"
+version = "0.1.0"
+authors = ["Vanessa McHale <vanessa.mchale@reconfigure.io>"]
+
+[profile.release]
+lto = true
+
+[[bin]]
+name = "hr"
+path = "src/main.rs"
+
+[dependencies]
+rayon = "0.8"
+walkdir = "1.0"
+
+[dependencies.clap]
+version = "2.25"
+features = ["yaml"]
