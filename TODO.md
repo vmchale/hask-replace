@@ -4,10 +4,11 @@
   - [ ] look at what ripgrep does (since it's faster??)
 # Ergonomics
   - [ ] prompt before replacement
-  - [ ] vim plugin/wrapper
+  - [x] vim plugin/wrapper
   - [ ] should move spec files as well
+  - [ ] allow user to input module name or file name
 # Features
-  - [ ] function replacement
+  - [ ] move functions between modules
 # Bugs
   - [ ] have to run it from the parent directory
   - [x] Overzealous matches when replacing
