@@ -1,0 +1,80 @@
+# Based on the "trust" template v0.1.1
+# https://github.com/japaric/trust/tree/v0.1.1
+
+dist: trusty
+language: rust
+services: docker
+sudo: required
+
+env:
+  global:
+    - CRATE_NAME=hask-replace
+
+matrix:
+  include:
+    # Linux
+    - env: TARGET=x86_64-unknown-linux-gnu
+      rust: nightly
+    - env: TARGET=x86_64-unknown-linux-musl
+      rust: nightly
+
+    # OSX
+    - env: TARGET=x86_64-apple-darwin
+      os: osx
+      rust: nightly
+
+    # *BSD
+    - env: TARGET=x86_64-unknown-freebsd DISABLE_TESTS=1
+      rust: nightly
+    - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
+      rust: nightly
+
+    # Other architectures
+    - env: TARGET=aarch64-unknown-linux-gnu
+      rust: nightly
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+      rust: nightly
+
+before_install: set -e
+
+install:
+  - sh ci/install.sh
+  - source ~/.cargo/env || true
+
+script:
+  - bash ci/script.sh
+
+after_script: set +e
+
+before_deploy:
+  - sh ci/before_deploy.sh
+
+deploy:
+  # - Create a `public_repo` GitHub token. Go to: https://github.com/settings/tokens/new
+  # - Encrypt it: `travis encrypt 0123456789012345678901234567890123456789
+  # - Paste the output down here
+  api_key:
+      secure: "iKJ1+jKV0BnmqhDHJVLFoILv1JYHl/Zs9Hgoi6CpeLexeHkI/oratGdrJLKdOewwsVy7CbtmBUCc1ISp4n/7QkjlnTYWfe1NTRgkcoWNS/qpF1IyLl/njmhDIQ+o//3XBskozCBZSIviBPJs030EoX3jQHVk6Jz/nQ4RrI2VqhRVZF30Ar3WHZuEBvF54haLErVj93SHF6JhRMPysHhJpmzJGlYIOfbdKqSHIWEx9Eg9DxFJWDeVe63Rn94cVDV0l5F47vuEFjTGtyJYDCR4kLsljG49NfUzxUeu7uk0HZqZfuQi5QdUkx8pV3Is+O+K/UQAUMYEbkRhMmrfmvL2TXM/tcxSkajlT5bRXg/X/Cw/kVZ57gC9ZR5T/AKz+BLJXUO3NvvhXuNKNj/nx+oH5/ZHaM36/5aUHWiXbYb3/TH3TrdKrE/nhunI9onD5Z8nvAGpMN5gU4uDXm85kfl4sRI3t9d1ZmKVAwuoqJh88gjvBB2PRi1MpqulTV7RJNzSSbl9pxC2/zuQuDXXPYjOHLFOTr5DRpLnft9RDLjxa8Ln18lKmUZA83cZ+4oecENZuGPYkpGGOSyDcXv6c3sx1dusjY1Vlbv5/JI9JmD4tcYvoPzgXBlx2emS1yNbJtxUp54/tV6ManF73oiU19uGbwiSkO0qnCsfBEjc+/nsjww="
+  file_glob: true
+  file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
+  on:
+    condition: $TRAVIS_RUST_VERSION = nightly
+    tags: true
+  provider: releases
+  skip_cleanup: true
+
+cache: cargo
+before_cache:
+  # Travis can't cache files that are not readable by "others"
+  - chmod -R a+r $HOME/.cargo
+
+branches:
+  only:
+    # release tags
+    - /\d+\.\d+\.\d+.*$/
+    - /^v\d+\.\d+\.\d+.*$/
+    - master
+
+notifications:
+  email:
+    on_success: never

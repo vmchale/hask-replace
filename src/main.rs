@@ -2,6 +2,7 @@
 extern crate clap;
 extern crate rayon;
 extern crate colored;
+extern crate regex;
 extern crate walkdir;
 
 use std::fs;
@@ -14,6 +15,7 @@ use colored::*;
 use std::fs::File;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
+use regex::{Regex, Captures};
 
 #[derive(Debug)]
 struct ProjectOwned {
@@ -122,11 +124,15 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let mut new_module_newline = new_module.to_string();
-        new_module_newline.push('\n');
-        let mut old_module_newline = old_module.to_string();
-        old_module_newline.push('\n');
-        let replacements = source.replacen(&old_module_newline, &new_module_newline, 1); // FIXME this could definitely be better (right now it matches overzealously)
+        let mut old_module_regex = "(".to_string();
+        old_module_regex.push_str(&old_module.replace(".", "\\."));
+        old_module_regex.push_str(")+");
+        let mut old_module_regex = old_module.to_string();
+        old_module_regex.push_str("(\n|,|\\(| where)+");
+        let re = Regex::new(&old_module_regex).unwrap();
+        let replacements = re.replacen(&source, 1, |caps: &Captures| {
+            format!("{}{}", new_module, &caps[1])
+        }).to_string();
         let mut source_file_write = File::create(&p).unwrap();
         let _ = source_file_write.write(replacements.as_bytes());
     })
@@ -134,7 +140,6 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
 
 fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
-    println!("{:?}", cabal);
     // step 1: determine that the module we want to replace in fact exists
     let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module), None);
     let old_module_exists = !(old_module_vec.is_empty());

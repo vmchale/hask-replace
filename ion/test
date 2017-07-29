@@ -4,6 +4,6 @@ pi new haskell test-nothing
 cargo run -- module test-nothing "Lib" "NewLib.Nested"
 cd test-nothing
 stack test
-exa -T
+#exa -T
 cd ../
 rm -rf test-nothing
