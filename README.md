@@ -14,8 +14,8 @@ hr module . "Dhall.Import" "Dhall.Dependencies"
 cabal new-build
 ```
 
-As you can see, it's a lot less painful than whatever witchcraft using bash and
-`sed` would accomplish the same thing.
+As you can see, it's a lot less painful than whatever witchcraft you'd have to
+resort to to accomplish the same thing in bash.
 
 ## Installation
 
