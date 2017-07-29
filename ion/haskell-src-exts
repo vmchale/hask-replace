@@ -1,9 +1,0 @@
-#!/usr/bin/env ion
-rm -rf haskell-src-exts-1.19.1
-cabal unpack haskell-src-exts
-cargo install --force
-cd haskell-src-exts-1.19.1
-time hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
-cabal new-build
-cd ../
-rm -rf haskell-src-exts-1.19.1
