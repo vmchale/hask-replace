@@ -16,6 +16,7 @@ use std::fs::File;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
 use regex::{Regex, Captures};
+use std::process::Command;
 
 #[derive(Debug)]
 struct ProjectOwned {
@@ -86,7 +87,7 @@ fn get_cabal(p: &PathBuf) -> ProjectOwned {
 
 }
 
-pub fn get_dir(paths_from_cli: Option<&str>) -> &str {
+fn get_dir(paths_from_cli: Option<&str>) -> &str {
     if let Some(read) = paths_from_cli {
         read
     } else {
@@ -102,7 +103,8 @@ fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        !path.starts_with(".stack-work") && p.file_name().to_string_lossy().to_string().ends_with(".hs")
+        !path.starts_with(".stack-work") &&
+            p.file_name().to_string_lossy().to_string().ends_with(".hs")
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
@@ -118,7 +120,12 @@ fn module_to_file_name(module: &str) -> String {
 fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     let dir: Vec<PathBuf> = get_source_files(&cabal.dir);
     let iter = dir.into_par_iter().filter(|p| {
-        !p.starts_with(".stack-work") && p.file_name().unwrap().to_string_lossy().to_string().ends_with(".hs")
+        !p.starts_with(".stack-work") &&
+            p.file_name()
+                .unwrap()
+                .to_string_lossy()
+                .to_string()
+                .ends_with(".hs")
     });
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
@@ -234,8 +241,8 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     old_module_regex.push_str("(\n|,)+?"); // TODO regex for cabal files
     let re = Regex::new(&old_module_regex).unwrap();
     let replacements = re.replacen(&source, 2, |caps: &Captures| {
-            format!("{}{}", new_module, &caps[1])
-        }).to_string();
+        format!("{}{}", new_module, &caps[1])
+    }).to_string();
     let mut source_file_write = OpenOptions::new().write(true).open(&p).unwrap();
     match source_file_write.write(replacements.as_bytes()) {
         Ok(_) => (),
@@ -269,6 +276,24 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
 }
 
+pub fn git_commit(src_dir: &str) -> () {
+    let mut cmd = "cd ".to_string();
+    cmd.push_str(src_dir);
+    cmd.push_str("&&");
+    cmd.push_str("git commit -am 'automatic commit made by hask-replace'");
+    if let Ok(c) = Command::new("sh")
+        .arg("-c")
+        .arg(cmd)
+        .stdout(std::process::Stdio::null())
+        .spawn()
+    {
+        c.wait_with_output().expect("failed to wait on child");
+    } else {
+        eprintln!("{}, git failed to stash changes. Aborting.", "Error".red());
+        exit(0x0001);
+    }
+}
+
 fn main() {
     let yaml = load_yaml!("options-en.yml");
     let matches = App::from_yaml(yaml)
@@ -276,7 +301,7 @@ fn main() {
         .setting(AppSettings::SubcommandRequired)
         .get_matches();
 
-    if let Some(_) = matches.subcommand_matches("function") {
+    if matches.subcommand_matches("function").is_some() {
 
         eprintln!("not yet implemented");
 
