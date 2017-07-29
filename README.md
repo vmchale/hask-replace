@@ -50,4 +50,10 @@ You will need to use the nightly release for this to work; if in doubt run
 rustup run nightly cargo install hask-replace
 ```
 
-## Use
+## Performance
+
+| Package | Task | Time |
+| ------- | ---- | ---- |
+| lens | Rename module | 14.77ms |
+| dhall | Rename Module | 7.41 ms |
+| haskell-src-exts | Rename Module | 30.29 ms |

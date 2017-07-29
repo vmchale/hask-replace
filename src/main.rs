@@ -54,7 +54,6 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
 }
 
 
-/// The arguments passed in here should *always* be strings pointing to directories
 fn get_cabal(p: &PathBuf) -> ProjectOwned {
 
     let parent = p.parent().unwrap_or(p);

@@ -3,7 +3,7 @@ rm -rf dhall-1.5.0
 cabal unpack dhall
 cargo install --force
 cd dhall-1.5.0
-hr module . "Dhall.Import" "Dhall.Dependencies"
+time hr module . "Dhall.Import" "Dhall.Dependencies"
 cabal new-build
 cd ../
 rm -rf dhall-1.5.0
