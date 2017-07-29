@@ -97,11 +97,10 @@ fn rayon_directory_contents(cabal: ProjectOwned, old_module: &str, new_module: &
     let dir: Vec<PathBuf> = get_directory_contents(cabal.dir);
     let iter = dir.into_par_iter().filter(|p| p.to_string_lossy().to_string().ends_with(".hs"));
     iter.for_each(|p| {
-        println!("{:?}", p);
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let replacements = source.replace(old_module, new_module);
+        let replacements = source.replacen(old_module, new_module, 1);
         let mut source_file_write = File::create(&p).unwrap();
         let _ = source_file_write.write(replacements.as_bytes());
     })
@@ -120,14 +119,10 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
         let old_string: String = module_to_file_name(old_module);
         let old_str: &str = old_string.as_str();
         let mut dir_vec: Vec<&str> = name_str.split(old_str).collect();
-        println!("{:?}", dir_vec);
         dir_vec.pop();
         let dir: String = dir_vec.pop().unwrap().to_string();
-        println!("{:?}", dir);
         (name, dir)
     } else {
-        println!("{:?}", old_module_vec);
-        println!("{:?}", module_to_file_name(old_module));
         eprintln!("module '{}' does not exist in this project", old_module);
         exit(0x0001);
     };
@@ -161,7 +156,6 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     // step 3: replace the module in the '.cabal' file
     let v: Vec<PathBuf> = vec![ PathBuf::from(&cabal_string) ];
     let _: Vec<()> = v.into_iter().map(|p| {
-        println!("{:?}", p);
         let mut source_file = OpenOptions::new().read(true).open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
@@ -176,7 +170,6 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     // step 5: move the actual file
     let mut new_module_path = src_dir;
     new_module_path.push_str(&module_to_file_name(new_module));
-    println!("{:?}, {}", old_module_name, new_module_path);
     let _ = fs::rename(old_module_name, new_module_path).unwrap();
 
 }
@@ -191,7 +184,7 @@ fn main() {
     // test stuff
     if let Some(command) = matches.subcommand_matches("function") {
 
-        println!("function");
+        println!("not yet implemented");
 
     } else if let Some(command) = matches.subcommand_matches("module") {
 
