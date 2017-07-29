@@ -9,7 +9,6 @@ cd ../
 rm -rf lens-4.15.3
 rm -rf dhall-1.5.0
 cabal unpack dhall
-cargo install --force
 cd dhall-1.5.0
 hr module . "Dhall.Import" "Dhall.Dependencies"
 cabal new-build
@@ -17,7 +16,6 @@ cd ../
 rm -rf dhall-1.5.0
 rm -rf haskell-src-exts-1.19.1
 cabal unpack haskell-src-exts
-cargo install --force
 cd haskell-src-exts-1.19.1
 hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
 cabal new-build

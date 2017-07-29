@@ -19,6 +19,22 @@ subcommands:
                 short: s
                 long: stash
                 help: Commit using git before making any changes
+            - function:
+                value_name: FUNCTION
+                index: 2
+                required: true
+                help: Name of function you wish to move
+            - old:
+                index: 3
+                required: true
+                value_name: OLD_MODULE
+                help: Module in which the function is located
+            - new:
+                index: 4
+                required: true
+                value_name: NEW_MODULE
+                help: Module we wish to move the function to
+
     - module:
         visible_alias: "m"
         about: Replace a module across a project.
