@@ -4,4 +4,5 @@ pi new haskell test-nothing
 cargo run -- module test-nothing "Lib" "NewLib"
 cd test-nothing
 stack test
+cd ../
 rm -rf test-nothing

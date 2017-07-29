@@ -1,8 +1,8 @@
 #!/usr/bin/env ion
 rm -rf test-nothing
-printf 'preparing benchmarks...'
+printf 'preparing benchmarks...\n'
 pi new haskell test-nothing > /dev/null
 cargo build --release &> /dev/null
-let benches = [ "rm -rf test-nothing ; ./target/release/hr module test-nothing Lib NewLib ; pi new haskell test-nothing", "rm -rf test-nothing ; pi new haskell test-nothing" ]
+let benches = [ "rm -rf test-nothing ; ./target/release/hr module test-nothing Lib NewLib ; pi new haskell test-nothing" "rm -rf test-nothing ; pi new haskell test-nothing" ]
 bench @benches 
 rm -rf test-nothing

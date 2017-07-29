@@ -3,7 +3,6 @@ extern crate clap;
 extern crate rayon;
 extern crate colored;
 extern crate walkdir;
-extern crate regex;
 
 use std::fs;
 use rayon::prelude::*;
@@ -14,7 +13,6 @@ use std::process::exit;
 use colored::*;
 use std::fs::File;
 use std::ffi::OsStr;
-use regex::Regex;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
 
@@ -24,33 +22,36 @@ struct ProjectOwned {
     pub cabal_file: PathBuf
 }
 
-fn find_by_end_vec(ref p: &PathBuf, find: &str) -> Vec<PathBuf> {
+fn find_by_end_vec(ref p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf> {
 
     let s = p.to_string_lossy().to_string();
 
-    let dir = WalkDir::new(&s)
+    let dir = if let Some(d) = depth {
+        WalkDir::new(&s).max_depth(d)
+    } else {
+        WalkDir::new(&s)
+    };
+    let iter = dir
         .into_iter()
         .filter_map(|e| e.ok())
         .filter(|p| { 
             p.path().to_string_lossy().to_string().ends_with(find)
         });
 
-    let vec: Vec<PathBuf> = dir.map(|x| x.path().to_path_buf()).collect();
+    let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
 
     vec 
 }
 
 
 /// The arguments passed in here should *always* be strings pointing to directories
-// TODO basically everything here could be faster.
 fn get_cabal(p: PathBuf) -> ProjectOwned {
 
-    let pre_parent = p.clone();
-    let parent = pre_parent.parent().unwrap_or(&pre_parent); // default to itself when we can't find a parent
+    let parent = &p.parent().unwrap_or(&p); // default to itself when we can't find a parent
     let s = p.to_string_lossy().to_string();
 
     // FIXME finding cabal files shouldn't require recursion down arbitrarily many levels
-    let vec = find_by_end_vec(&p, ".cabal");
+    let vec = find_by_end_vec(&p, ".cabal", Some(1));
     let vec_len = vec.len();
 
     // if we find more than one cabal file, abort.
@@ -58,7 +59,7 @@ fn get_cabal(p: PathBuf) -> ProjectOwned {
         eprintln!("{}: more than one '.cabal' file in indicated directory, aborting.", "Error".red());
         exit(0x0001)
     } else if vec_len == 0 {
-        ProjectOwned { dir: parent.to_path_buf(), cabal_file: p }
+        ProjectOwned { dir: parent.to_path_buf(), cabal_file: p.clone() }
     } else {
         ProjectOwned { dir: PathBuf::from(s), cabal_file: { let mut cabal_path = p.clone() ; cabal_path.push("/test-nothing.cabal") ; cabal_path } } // FIXME wrong path to cabal file.
     }
@@ -109,7 +110,7 @@ fn rayon_directory_contents(cabal: ProjectOwned, old_module: &str, new_module: &
 fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
 
     // step 1: determine that the module we want to replace in fact exists
-    let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module));
+    let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module), None);
     let old_module_exists = !(old_module_vec.len() == 0);
 
     let (old_module_name, src_dir) = if old_module_exists {
@@ -118,10 +119,8 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
         let name_str: &str = name_string.as_str();
         let old_string: String = module_to_file_name(old_module);
         let old_str: &str = old_string.as_str();
-        let mut dir_vec: Vec<&str> = name_str.split(old_str).collect();
-        dir_vec.pop();
-        let dir: String = dir_vec.pop().unwrap().to_string();
-        (name, dir)
+        let dir: &str = name_str.trim_right_matches(old_str);
+        (name, dir.to_string())
     } else {
         eprintln!("module '{}' does not exist in this project", old_module);
         exit(0x0001);
@@ -135,9 +134,8 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     let mut contents = String::new();
     cabal_file.read_to_string(&mut contents).unwrap();
 
-    let re = Regex::new(old_module);
-
-    let in_cabal_file = re.unwrap().is_match(&contents);
+    let in_cabal_file = (&contents).contains(old_module);
+    //let in_cabal_file = re.unwrap().is_match(&contents);
 
     if !in_cabal_file {
         eprintln!("module '{}' not found in your cabal file '{}'", old_module, &cabal_string);
@@ -170,7 +168,12 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     // step 5: move the actual file
     let mut new_module_path = src_dir;
     new_module_path.push_str(&module_to_file_name(new_module));
-    let _ = fs::rename(old_module_name, new_module_path).unwrap();
+    if let Ok(s) = fs::rename(&old_module_name, &new_module_path) {
+        s
+    } else {
+        eprintln!("{}: failed to rename module {} to {}", "Error".red(), old_module_name.to_string_lossy(), new_module_path);
+        exit(0x0001)
+    }
 
 }
 
@@ -181,10 +184,9 @@ fn main() {
         .setting(AppSettings::SubcommandRequired)
         .get_matches();
 
-    // test stuff
     if let Some(command) = matches.subcommand_matches("function") {
 
-        println!("not yet implemented");
+        eprintln!("not yet implemented");
 
     } else if let Some(command) = matches.subcommand_matches("module") {
 
@@ -192,15 +194,15 @@ fn main() {
 
         let dir = PathBuf::from(dir_string);
 
-        let old_module = command.value_of("old").unwrap();
+        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
 
-        let new_module = command.value_of("new").unwrap();
+        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
         let cabal_project = get_cabal(dir);
 
         replace_all(cabal_project, old_module, new_module);
 
     } else {
-        println!("nothing");
+        eprintln!("{}: failed to supply a subcommand", "Error".red());
     }
 }
