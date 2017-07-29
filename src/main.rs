@@ -42,7 +42,7 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.starts_with(".")) && (path.file_name().unwrap().to_string_lossy().to_string().ends_with(find) || path.to_string_lossy().to_string().ends_with(find))
+        (!path.starts_with(".stack-work")) && (path.to_string_lossy().to_string().ends_with(find))
     });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
@@ -100,7 +100,7 @@ fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        !path.starts_with(".") && p.file_name().to_string_lossy().to_string().ends_with(".hs")
+        !path.starts_with(".stack-work") && p.file_name().to_string_lossy().to_string().ends_with(".hs")
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
@@ -116,13 +116,17 @@ fn module_to_file_name(module: &str) -> String {
 fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     let dir: Vec<PathBuf> = get_source_files(&cabal.dir);
     let iter = dir.into_par_iter().filter(|p| {
-        !p.starts_with(".") && p.file_name().unwrap().to_string_lossy().to_string().ends_with(".hs")
+        !p.starts_with(".stack-work") && p.file_name().unwrap().to_string_lossy().to_string().ends_with(".hs")
     });
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let replacements = source.replacen(old_module, new_module, 1);
+        let mut new_module_newline = new_module.to_string();
+        new_module_newline.push('\n');
+        let mut old_module_newline = old_module.to_string();
+        old_module_newline.push('\n');
+        let replacements = source.replacen(&old_module_newline, &new_module_newline, 1); // FIXME this could definitely be better (right now it matches overzealously)
         let mut source_file_write = File::create(&p).unwrap();
         let _ = source_file_write.write(replacements.as_bytes());
     })
@@ -130,6 +134,7 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
 
 fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
+    println!("{:?}", cabal);
     // step 1: determine that the module we want to replace in fact exists
     let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module), None);
     let old_module_exists = !(old_module_vec.is_empty());
@@ -258,7 +263,7 @@ fn main() {
         .setting(AppSettings::SubcommandRequired)
         .get_matches();
 
-    if let Some(command) = matches.subcommand_matches("function") {
+    if let Some(_) = matches.subcommand_matches("function") {
 
         eprintln!("not yet implemented");
 

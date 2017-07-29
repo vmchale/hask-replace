@@ -5,5 +5,9 @@
 # Ergonomics
   - [ ] prompt before replacement
   - [ ] vim plugin/wrapper
+  - [ ] should move spec files as well
 # Features
   - [ ] function replacement
+# Bugs
+  - [ ] have to run it from the parent directory
+  - [x] Overzealous matches when replacing
