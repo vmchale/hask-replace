@@ -4,8 +4,8 @@ printf 'preparing benchmarks...\n'
 cargo build --release &> /dev/null
 let clean = "rm -rf test-nothing"
 let init = "pi new haskell test-nothing"
-let sed = "cd test-nothing ; git grep -l 'Lib' | xargs sed -i 's/Lib/NewLib/g' ; mv src/Lib.hs src/Lib.hs ; cd ../"
-let ripgrep = "cd test-nothing ; rg 'Lib' --replace 'NewLib' ; mv src/Lib.hs ; cd ../"
+let sed = "cd test-nothing ; git grep -l 'Lib' | xargs sed -i 's/Lib/NewLib/g' ; mv src/Lib.hs src/NewLib.hs ; cd ../"
+let ripgrep = "cd test-nothing ; rg 'Lib' --replace 'NewLib' ; mv src/Lib.hs src/NewLib.hs ; cd ../"
 let hr = "./target/release/hr module test-nothing Lib NewLib"
 let benches = [ "$init ; $hr ; $clean" "$init ; $clean" "$init ; $sed ; $clean" "$init ; cd test-nothing ; cd ../ ; $clean" "$init ; $ripgrep ; $clean" ]
 bench @benches 

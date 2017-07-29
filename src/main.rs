@@ -12,20 +12,21 @@ use walkdir::WalkDir;
 use std::process::exit;
 use colored::*;
 use std::fs::File;
-use std::ffi::OsStr;
 use std::io::prelude::*;
 use std::fs::OpenOptions;
 
 #[derive(Debug)]
 struct ProjectOwned {
     pub dir: PathBuf,
-    pub cabal_file: PathBuf
+    pub cabal_file: PathBuf,
 }
 
 impl ProjectOwned {
-   
     fn get_cabal_path(&self) -> String {
-        get_cabal(&self.dir).cabal_file.to_string_lossy().to_string()
+        get_cabal(&self.dir)
+            .cabal_file
+            .to_string_lossy()
+            .to_string()
     }
 }
 
@@ -39,16 +40,14 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
     } else {
         WalkDir::new(&s)
     };
-    let iter = dir
-        .into_iter()
-        .filter_map(|e| e.ok())
-        .filter(|p| { 
-            p.path().to_string_lossy().to_string().ends_with(find)
-        });
+    let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
+        let path = p.path();
+        !path.starts_with(".") && path.ends_with(find)
+    });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
 
-    vec 
+    vec
 }
 
 
@@ -63,13 +62,24 @@ fn get_cabal(p: &PathBuf) -> ProjectOwned {
 
     // if we find more than one cabal file, abort.
     if vec_len > 1 {
-        eprintln!("{}: more than one '.cabal' file in indicated directory, aborting.", "Error".red());
+        eprintln!(
+            "{}: more than one '.cabal' file in indicated directory, aborting.",
+            "Error".red()
+        );
         exit(0x0001)
     } else if vec_len == 0 {
-        ProjectOwned { dir: parent.to_path_buf(), cabal_file: p.clone() }
+        ProjectOwned {
+            dir: parent.to_path_buf(),
+            cabal_file: p.clone(),
+        }
     } else {
         let cabal_name = vec.pop().unwrap();
-        ProjectOwned { dir: PathBuf::from(s), cabal_file: { cabal_name } }
+        ProjectOwned {
+            dir: PathBuf::from(s),
+            cabal_file: {
+                cabal_name
+            },
+        }
     }
 
 }
@@ -89,7 +99,8 @@ fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
     let dir = WalkDir::new(s).into_iter();
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
-        p.path().extension() == Some(OsStr::new("hs"))
+        let path = p.path();
+        !path.starts_with(".") && path.ends_with(".hs")
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
@@ -97,14 +108,16 @@ fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
 }
 
 fn module_to_file_name(module: &str) -> String {
-    let mut replacements = module.replace(".","/");
+    let mut replacements = module.replace(".", "/");
     replacements.push_str(".hs");
     replacements
 }
 
 fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     let dir: Vec<PathBuf> = get_source_files(&cabal.dir);
-    let iter = dir.into_par_iter().filter(|p| p.to_string_lossy().to_string().ends_with(".hs"));
+    let iter = dir.into_par_iter().filter(|p| {
+        p.ends_with(".hs")
+    });
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
@@ -137,23 +150,34 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     // TODO make this a method
     let cabal_string = cabal.get_cabal_path();
 
-    let mut cabal_file =
-        match File::open(&cabal_string) {
-            Ok(x) => x,
-            _ => { eprintln!("{}: Failed to open file at: {}", "Error".red(), cabal_string);
-                   exit(0x0001) },
-        };
+    let mut cabal_file = match File::open(&cabal_string) {
+        Ok(x) => x,
+        _ => {
+            eprintln!(
+                "{}: Failed to open file at: {}",
+                "Error".red(),
+                cabal_string
+            );
+            exit(0x0001)
+        }
+    };
     let mut contents = String::new();
     match cabal_file.read_to_string(&mut contents) {
         Ok(_) => (),
-        _ => { eprintln!("{}: Failed to read file at: {}", "Error".red(), contents);
-               exit(0x0001) },
+        _ => {
+            eprintln!("{}: Failed to read file at: {}", "Error".red(), contents);
+            exit(0x0001)
+        }
     }
 
     let in_cabal_file = (&contents).contains(old_module);
 
     if !in_cabal_file {
-        eprintln!("module '{}' not found in your cabal file '{}'", old_module, &cabal_string);
+        eprintln!(
+            "module '{}' not found in your cabal file '{}'",
+            old_module,
+            &cabal_string
+        );
         exit(0x0001);
     }
 
@@ -164,32 +188,47 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     target_directory.push_str(&v.join("/"));
     if !PathBuf::from(&target_directory).exists() {
         match fs::create_dir_all(&target_directory) {
-            Ok (x) => x,
-            _ => { eprintln!("{}: failed to create directory '{}'", "Error".red(), target_directory) ;
-                   exit(0x0001) },
+            Ok(x) => x,
+            _ => {
+                eprintln!(
+                    "{}: failed to create directory '{}'",
+                    "Error".red(),
+                    target_directory
+                );
+                exit(0x0001)
+            }
         }
     }
 
     // step 3: replace the module in the '.cabal' file
     let p: PathBuf = PathBuf::from(&cabal_string);
-    let mut source_file =
-        match OpenOptions::new().read(true).open(&p) {
-            Ok(x) => x,
-            _ => { eprintln!("{}: Failed to open file at: {}", "Error".red(), p.display());
-                   exit(0x0001) },
-        };
+    let mut source_file = match OpenOptions::new().read(true).open(&p) {
+        Ok(x) => x,
+        _ => {
+            eprintln!("{}: Failed to open file at: {}", "Error".red(), p.display());
+            exit(0x0001)
+        }
+    };
     let mut source = String::new();
     match source_file.read_to_string(&mut source) {
         Ok(_) => (),
-        _ => { eprintln!("{}: Failed to read file at: {}", "Error".red(), p.display());
-               exit(0x0001) },
+        _ => {
+            eprintln!("{}: Failed to read file at: {}", "Error".red(), p.display());
+            exit(0x0001)
+        }
     }
     let replacements = source.replace(old_module, new_module);
     let mut source_file_write = OpenOptions::new().write(true).open(&p).unwrap();
     match source_file_write.write(replacements.as_bytes()) {
         Ok(_) => (),
-        _ => { eprintln!("{}: Failed to write file at: {}", "Error".red(), p.display());
-               exit(0x0001) },
+        _ => {
+            eprintln!(
+                "{}: Failed to write file at: {}",
+                "Error".red(),
+                p.display()
+            );
+            exit(0x0001)
+        }
     }
 
     // step 4: replace every 'import Module' with 'import NewModule'
@@ -201,7 +240,12 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     if let Ok(s) = fs::rename(&old_module_name, &new_module_path) {
         s
     } else {
-        eprintln!("{}: failed to rename module {} to {}", "Error".red(), old_module_name.to_string_lossy(), new_module_path);
+        eprintln!(
+            "{}: failed to rename module {} to {}",
+            "Error".red(),
+            old_module_name.to_string_lossy(),
+            new_module_path
+        );
         exit(0x0001)
     }
 
