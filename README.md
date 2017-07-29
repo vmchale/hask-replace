@@ -19,9 +19,17 @@ resort to to accomplish the same thing in bash.
 
 ## Installation
 
+### Script
+
+The easiest way to install for most users is probably via a shell script, viz.
+
+```
+curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git vmchale/hask-replace
+```
+
 ### Binary releases
 
-The easiest way for most users is simply to download the prebuilt binaries.
+If the script doesn't work, you can also download prebuilt binaries.
 You can find binaries for various platforms on the
 [release](https://github.com/vmchale/hask-replace/releases) page.
 

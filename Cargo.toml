@@ -4,6 +4,9 @@ version = "0.1.0"
 authors = ["Vanessa McHale <vanessa.mchale@reconfigure.io>"]
 license-file = "LICENSE"
 description = "Rename haskell modules at the speed of Rust"
+repository = "https://github.com/vmchale/hask-replace"
+documentation = "https://github.com/vmchale/hask-replace#README"
+homepage = "https://github.com/vmchale/hask-replace"
 
 [profile.release]
 lto = true
