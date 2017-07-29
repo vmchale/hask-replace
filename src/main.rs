@@ -130,7 +130,7 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
         let mut old_module_regex = old_module.to_string();
         old_module_regex.push_str("(\n|\\(|( *) \\(|( *) where)+?"); // TODO regex for cabal files
         let re = Regex::new(&old_module_regex).unwrap();
-        let replacements = re.replacen(&source, 1, |caps: &Captures| {
+        let replacements = re.replacen(&source, 2, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
         }).to_string();
         let mut source_file_write = File::create(&p).unwrap();
@@ -233,7 +233,7 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     let mut old_module_regex = old_module.to_string();
     old_module_regex.push_str("(\n|,)+?"); // TODO regex for cabal files
     let re = Regex::new(&old_module_regex).unwrap();
-    let replacements = re.replacen(&source, 1, |caps: &Captures| {
+    let replacements = re.replacen(&source, 2, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
         }).to_string();
     let mut source_file_write = OpenOptions::new().write(true).open(&p).unwrap();
