@@ -4,7 +4,7 @@ about: Rename modules and functions across Haskell projects
 subcommands:
     - function:
         visible_alias: "f"
-        about: Replace a function across a project
+        about: Move a function between modules
         args:
             - project:
                 value_name: PROJECT
@@ -37,7 +37,7 @@ subcommands:
 
     - module:
         visible_alias: "m"
-        about: Replace a module across a project.
+        about: Replace a module across a project
         args:
             - project:
                 value_name: PROJECT

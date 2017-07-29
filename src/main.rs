@@ -134,7 +134,7 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
         old_module_regex.push_str(&old_module.replace(".", "\\."));
         old_module_regex.push_str(")+");
         let mut old_module_regex = old_module.to_string();
-        old_module_regex.push_str("(\n|\\(|( *) \\(|( *) where|\\.)+?"); // TODO regex for cabal files
+        old_module_regex.push_str("(\n|\\(|( *) \\(|( *) where|\\.)+?");
         let re = Regex::new(&old_module_regex).unwrap();
         let replacements = re.replacen(&source, 0, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
@@ -237,7 +237,7 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     old_module_regex.push_str(&old_module.replace(".", "\\."));
     old_module_regex.push_str(")+");
     let mut old_module_regex = old_module.to_string();
-    old_module_regex.push_str("(\n|,)+?"); // TODO regex for cabal files
+    old_module_regex.push_str("(\n|,)+?");
     let re = Regex::new(&old_module_regex).unwrap();
     let replacements = re.replacen(&source, 2, |caps: &Captures| {
         format!("{}{}", new_module, &caps[1])
@@ -275,7 +275,7 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
 }
 
-pub fn git_commit(src_dir: &str) -> () {
+fn git_commit(src_dir: &str) -> () {
     let mut cmd = "cd ".to_string();
     cmd.push_str(src_dir);
     cmd.push_str("&&");
@@ -315,6 +315,10 @@ fn main() {
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
         let cabal_project = get_cabal(&dir);
+
+        if command.is_present("stash") {
+            git_commit(&cabal_project.dir.to_string_lossy().to_string());
+        }
 
         replace_all(&cabal_project, old_module, new_module);
 
