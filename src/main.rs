@@ -1,9 +1,9 @@
+#[macro_use]
+extern crate clap;
 extern crate rayon;
 extern crate colored;
 extern crate walkdir;
 extern crate regex;
-#[macro_use]
-extern crate clap;
 
 use std::fs;
 use rayon::prelude::*;
@@ -102,8 +102,8 @@ fn rayon_directory_contents(cabal: ProjectOwned, old_module: &str, new_module: &
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
         let replacements = source.replace(old_module, new_module);
-        let mut source_file_write = File::open(&p).unwrap();
-        let _ = source_file_write.write_all(replacements.as_bytes());
+        let mut source_file_write = File::create(&p).unwrap();
+        let _ = source_file_write.write(replacements.as_bytes());
     })
 }
 
@@ -113,8 +113,18 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module));
     let old_module_exists = !(old_module_vec.len() == 0);
 
-    let old_module_name = if old_module_exists {
-        old_module_vec.pop().unwrap()
+    let (old_module_name, src_dir) = if old_module_exists {
+        let name = old_module_vec.pop().unwrap();
+        let name_string: String = name.to_string_lossy().to_string();
+        let name_str: &str = name_string.as_str();
+        let old_string: String = module_to_file_name(old_module);
+        let old_str: &str = old_string.as_str();
+        let mut dir_vec: Vec<&str> = name_str.split(old_str).collect();
+        println!("{:?}", dir_vec);
+        dir_vec.pop();
+        let dir: String = dir_vec.pop().unwrap().to_string();
+        println!("{:?}", dir);
+        (name, dir)
     } else {
         println!("{:?}", old_module_vec);
         println!("{:?}", module_to_file_name(old_module));
@@ -164,7 +174,10 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     rayon_directory_contents(cabal, old_module, new_module);
 
     // step 5: move the actual file
-    let _ = fs::rename(old_module_name, module_to_file_name(new_module)).unwrap();
+    let mut new_module_path = src_dir;
+    new_module_path.push_str(&module_to_file_name(new_module));
+    println!("{:?}, {}", old_module_name, new_module_path);
+    let _ = fs::rename(old_module_name, new_module_path).unwrap();
 
 }
 
