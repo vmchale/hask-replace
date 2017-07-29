@@ -1,8 +1,10 @@
 #!/usr/bin/env ion
 rm -rf test-nothing
 printf 'preparing benchmarks...\n'
-pi new haskell test-nothing > /dev/null
 cargo build --release &> /dev/null
-let benches = [ "rm -rf test-nothing ; ./target/release/hr module test-nothing Lib NewLib ; pi new haskell test-nothing" "rm -rf test-nothing ; pi new haskell test-nothing" ]
+let clean = "rm -rf test-nothing"
+let init = "pi new haskell test-nothing"
+let sed = "cd test-nothing ; git grep -l 'Lib' | xargs sed -i 's/Lib/NewLib/g' ; mv src/Lib.hs src/Lib.hs ; cd ../"
+let benches = [ "$init ; ./target/release/hr module test-nothing Lib Lib ; $clean" "$init ; $clean" "$init ; $sed ; $clean" ]
 bench @benches 
 rm -rf test-nothing

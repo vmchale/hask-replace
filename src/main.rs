@@ -47,7 +47,7 @@ fn find_by_end_vec(ref p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<Pat
 /// The arguments passed in here should *always* be strings pointing to directories
 fn get_cabal(p: PathBuf) -> ProjectOwned {
 
-    let parent = &p.parent().unwrap_or(&p); // default to itself when we can't find a parent
+    let parent = &p.parent().unwrap_or(&p);
     let s = p.to_string_lossy().to_string();
 
     // FIXME finding cabal files shouldn't require recursion down arbitrarily many levels
@@ -135,7 +135,6 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     cabal_file.read_to_string(&mut contents).unwrap();
 
     let in_cabal_file = (&contents).contains(old_module);
-    //let in_cabal_file = re.unwrap().is_match(&contents);
 
     if !in_cabal_file {
         eprintln!("module '{}' not found in your cabal file '{}'", old_module, &cabal_string);
