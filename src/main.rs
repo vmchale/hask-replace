@@ -190,11 +190,11 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
     if !in_cabal_file {
         eprintln!(
-            "module '{}' not found in your cabal file '{}'",
+            "{}: module '{}' not found in your cabal file '{}'",
+            "Warning".yellow(),
             old_module,
             &cabal_string
         );
-        exit(0x0001);
     }
 
     // step 2: determine the targeted directory in fact exists, or make it ourselves.
