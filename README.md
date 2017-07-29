@@ -5,4 +5,4 @@ I've yet to decide on all the flags.
 
 ## Installation
 
-## Configuration
+## Use

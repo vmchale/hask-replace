@@ -42,7 +42,7 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.starts_with(".")) && path.file_name().unwrap().to_string_lossy().to_string().ends_with(find)
+        (!path.starts_with(".")) && (path.file_name().unwrap().to_string_lossy().to_string().ends_with(find) || path.to_string_lossy().to_string().ends_with(find))
     });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
@@ -143,7 +143,6 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
         let dir: &str = name_str.trim_right_matches(old_str);
         (name, dir.to_string())
     } else {
-        println!("{:?}", old_module_vec);
         eprintln!("module '{}' does not exist in this project", old_module);
         exit(0x0001);
     };
