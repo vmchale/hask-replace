@@ -16,6 +16,7 @@ use std::fs::File;
 use std::ffi::OsStr;
 use regex::Regex;
 use std::io::prelude::*;
+use std::fs::OpenOptions;
 
 #[derive(Debug)]
 struct ProjectOwned {
@@ -109,27 +110,25 @@ fn rayon_directory_contents(cabal: ProjectOwned, old_module: &str, new_module: &
 fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
 
     // step 1: determine that the module we want to replace in fact exists
-    let old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module));
+    let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module));
     let old_module_exists = !(old_module_vec.len() == 0);
 
-    if !old_module_exists {
+    let old_module_name = if old_module_exists {
+        old_module_vec.pop().unwrap()
+    } else {
         println!("{:?}", old_module_vec);
         println!("{:?}", module_to_file_name(old_module));
         eprintln!("module '{}' does not exist in this project", old_module);
         exit(0x0001);
-    }
+    };
 
     // TODO make this a method
     let mut cabal_string = cabal.dir.to_string_lossy().to_string();
     cabal_string.push_str(&cabal.cabal_file.to_string_lossy().to_string());
 
-    let mut file = File::open(&cabal_string)
-        .unwrap_or({ 
-            eprintln!("file: {} failed to open", &cabal_string); 
-            exit (0x0001) }
-        );
+    let mut cabal_file = File::open(&cabal_string).unwrap();
     let mut contents = String::new();
-    file.read_to_string(&mut contents).unwrap();
+    cabal_file.read_to_string(&mut contents).unwrap();
 
     let re = Regex::new(old_module);
 
@@ -150,9 +149,22 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     }
 
     // step 3: replace the module in the '.cabal' file
+    let v: Vec<PathBuf> = vec![ PathBuf::from(&cabal_string) ];
+    let _: Vec<()> = v.into_iter().map(|p| {
+        println!("{:?}", p);
+        let mut source_file = OpenOptions::new().read(true).open(&p).unwrap();
+        let mut source = String::new();
+        source_file.read_to_string(&mut source).unwrap();
+        let replacements = source.replace(old_module, new_module);
+        let mut source_file_write = OpenOptions::new().write(true).open(&p).unwrap();
+        let _ = source_file_write.write(replacements.as_bytes()).unwrap();
+    }).collect();
 
     // step 4: replace every 'import Module' with 'import NewModule'
     rayon_directory_contents(cabal, old_module, new_module);
+
+    // step 5: move the actual file
+    let _ = fs::rename(old_module_name, module_to_file_name(new_module)).unwrap();
 
 }
 
