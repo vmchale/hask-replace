@@ -1,0 +1,9 @@
+#!/usr/bin/env ion
+rm -rf lens-4.15.3
+cabal unpack lens
+cargo install --force
+cd lens-4.15.3
+time hr module . "Control.Lens.Internal.TH" "Control.Lens.Prismatic"
+cabal new-build
+cd ../
+rm -rf lens-4.15.3
