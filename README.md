@@ -1,5 +1,8 @@
 # hask-replace
 
+[![Windows build status](https://ci.appveyor.com/api/projects/status/github/vmchale/hask-replace?svg=true)](https://ci.appveyor.com/project/vmchale/hask-replace)
+[![Build Status](https://travis-ci.org/vmchale/hask-replace.svg?branch=master)](https://travis-ci.org/vmchale/hask-replace)
+
 `hask-replace` is a command-line tool that simplifies the process of renaming
 Haskell modules.
 
