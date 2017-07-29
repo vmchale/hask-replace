@@ -42,7 +42,7 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        !path.starts_with(".") && path.ends_with(find)
+        (!path.starts_with(".")) && path.file_name().unwrap().to_string_lossy().to_string().ends_with(find)
     });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
@@ -100,7 +100,7 @@ fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        !path.starts_with(".") && path.ends_with(".hs")
+        !path.starts_with(".") && p.file_name().to_string_lossy().to_string().ends_with(".hs")
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
@@ -116,7 +116,7 @@ fn module_to_file_name(module: &str) -> String {
 fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     let dir: Vec<PathBuf> = get_source_files(&cabal.dir);
     let iter = dir.into_par_iter().filter(|p| {
-        p.ends_with(".hs")
+        !p.starts_with(".") && p.file_name().unwrap().to_string_lossy().to_string().ends_with(".hs")
     });
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
@@ -128,7 +128,7 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
     })
 }
 
-fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
+fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
     // step 1: determine that the module we want to replace in fact exists
     let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module), None);
@@ -143,6 +143,7 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
         let dir: &str = name_str.trim_right_matches(old_str);
         (name, dir.to_string())
     } else {
+        println!("{:?}", old_module_vec);
         eprintln!("module '{}' does not exist in this project", old_module);
         exit(0x0001);
     };
@@ -232,7 +233,7 @@ fn replace_all(cabal: ProjectOwned, old_module: &str, new_module: &str) -> () {
     }
 
     // step 4: replace every 'import Module' with 'import NewModule'
-    rayon_directory_contents(&cabal, old_module, new_module);
+    rayon_directory_contents(cabal, old_module, new_module);
 
     // step 5: move the actual file
     let mut new_module_path = src_dir;
@@ -274,7 +275,7 @@ fn main() {
 
         let cabal_project = get_cabal(&dir);
 
-        replace_all(cabal_project, old_module, new_module);
+        replace_all(&cabal_project, old_module, new_module);
 
     } else {
         eprintln!("{}: failed to supply a subcommand", "Error".red());
