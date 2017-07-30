@@ -5,10 +5,12 @@
 # Ergonomics
   - [ ] prompt before replacement
   - [x] vim plugin/wrapper
-  - [ ] should move spec files as well
+    - [ ] nice diff output like vim-hare
+  - [ ] should optionally move spec files as well
   - [ ] allow user to input module name or file name
 # Features
   - [ ] move functions between modules
+  ~~- [ ] rename a function across modules~~
 # Bugs
-  - [ ] have to run it from the parent directory
+  - [x] have to run it from the parent directory
   - [x] Overzealous matches when replacing

@@ -18,6 +18,7 @@ path = "src/main.rs"
 [dependencies]
 rayon = "0.8"
 walkdir = "1.0"
+text_io = "0.1"
 colored = "1.5"
 regex = "0.2"
 
