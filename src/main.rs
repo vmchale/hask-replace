@@ -124,7 +124,7 @@ fn get_yes() -> bool {
     let s2: &str = &s;
     match s2 {
         "Yes" | "Y" | "y" | "yes" => true,
-        _ => false
+        _ => false,
     }
 }
 
@@ -161,22 +161,14 @@ fn write_file<P: AsRef<Path> + Debug>(p: P, s: String) -> () {
     let mut file = match File::create(&p) {
         Ok(x) => x,
         _ => {
-            eprintln!(
-                "{}: Failed to open file at: {:?}",
-                "Error".red(),
-                p
-            );
+            eprintln!("{}: Failed to open file at: {:?}", "Error".red(), p);
             exit(0x0001)
         }
     };
     match file.write(s.as_bytes()) {
         Ok(_) => (),
         _ => {
-            eprintln!(
-                "{}: Failed to write file at: {:?}",
-                "Error".red(),
-                p
-            );
+            eprintln!("{}: Failed to write file at: {:?}", "Error".red(), p);
             exit(0x0001)
         }
     }
@@ -188,11 +180,7 @@ fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
     let mut file = match File::open(&p) {
         Ok(x) => x,
         _ => {
-            eprintln!(
-                "{}: Failed to open file at: {:?}",
-                "Error".red(),
-                p
-            );
+            eprintln!("{}: Failed to open file at: {:?}", "Error".red(), p);
             exit(0x0001)
         }
     };
@@ -367,18 +355,21 @@ fn move_function(cabal: &ProjectOwned, function: &str, old_module: &str, new_mod
 
     // step 3: remove the function from the list of explicit exports of the first module if
     // necessary, and add it to the list of explicit exports of the second if necessary
-    
-    // step 4: anywhere that the old module was imported, add the new module, if the function 
+
+    // step 4: anywhere that the old module was imported, add the new module, if the function
     // is called in that module. If it was imported explicitly, import it explicitly unless the new
     // module is already there. If the old module's explicit imports are empty now, warn the user
     // in case they still need the instances from the old module.
-    eprintln!("{}: hr does not yet replace explicit and qualified imports across projects!", "Warning".yellow());
+    eprintln!(
+        "{}: hr does not yet replace explicit and qualified imports across projects!",
+        "Warning".yellow()
+    );
 
     // step 5: if the old module was imported under a qualified name, and the function was called
     // using this qualified name, import the new module qualified (if it's not already imported)
     // using the first letter of the last bit to name it, and then replace the qualified uses of
     // the old function
-    
+
 }
 
 fn main() {
@@ -404,8 +395,9 @@ fn main() {
             git_commit(&cabal_project.dir.to_string_lossy().to_string());
         }
 
+        let function = command.value_of("function").unwrap();
 
-        move_function(&cabal_project, "oedipusRex", old_module, new_module);
+        move_function(&cabal_project, function, old_module, new_module);
 
     } else if let Some(command) = matches.subcommand_matches("module") {
 

@@ -6,31 +6,32 @@ subcommands:
         visible_alias: "f"
         about: Move a function between modules
         args:
-            - project:
-                value_name: PROJECT
+            - function:
+                value_name: FUNCTION
                 index: 1
                 required: true
+                help: Name of function you wish to move
+            - project:
+                value_name: PROJECT
+                index: 2
                 help: "Directory or '.cabal' file for the project"
             - prompt:
-                short: p
                 long: prompt
-                help: Require a prompt before any substitutions are made
+                short: p
+                help: Prompt before overwriting file
             - stash:
                 short: s
                 long: stash
                 help: Commit using git before making any changes
-            - function:
-                value_name: FUNCTION
-                index: 2
-                required: true
-                help: Name of function you wish to move
             - old:
-                index: 3
+                long: old
+                short: o
                 required: true
                 value_name: OLD_MODULE
                 help: Module in which the function is located
             - new:
-                index: 4
+                long: new
+                short: n
                 required: true
                 value_name: NEW_MODULE
                 help: Module we wish to move the function to
@@ -44,10 +45,6 @@ subcommands:
                 index: 1
                 required: true
                 help: "Directory or '.cabal' file for the project"
-            - prompt:
-                short: p
-                long: prompt
-                help: Require a prompt before any substitutions are made
             - stash:
                 short: s
                 long: stash
