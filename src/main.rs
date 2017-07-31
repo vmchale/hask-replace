@@ -267,9 +267,15 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     // step 4: replace every 'import Module' with 'import NewModule'
     rayon_directory_contents(cabal, old_module, new_module);
 
+    // TODO copy a file only?
     // step 5: move the actual file
     let mut new_module_path = src_dir;
     new_module_path.push_str(&module_to_file_name(new_module));
+    // FIXME don't overwrite!!
+    if Path::new(&new_module_path).exists() {
+        eprintln!("{}: destination module already exists.", "Error".red());
+        exit(0x0001);
+    }
     if let Ok(s) = fs::rename(&old_module_name, &new_module_path) {
         s
     } else {
