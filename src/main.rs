@@ -139,14 +139,7 @@ fn get_yes() -> bool {
 fn rayon_directory_contents(config: &ProjectOwned, old_module: &str, new_module: &str, extension: &str) -> () {
     let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
     // FIXME we filter the directory results twice
-    let iter = dir.into_par_iter().filter(|p| {
-        !p.starts_with(".stack-work") &&
-            p.file_name()
-                .unwrap()
-                .to_string_lossy()
-                .to_string()
-                .ends_with(extension)
-    });
+    let iter = dir.into_par_iter();
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
@@ -157,7 +150,8 @@ fn rayon_directory_contents(config: &ProjectOwned, old_module: &str, new_module:
         let mut old_module_regex = old_module.to_string();
         old_module_regex.push_str("(\n|\\(|( *) \\(|( *) where|\\.)+?");
         let re = Regex::new(&old_module_regex).unwrap();
-        let replacements = re.replacen(&source, 0, |caps: &Captures| {
+        let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
+        let replacements = re.replacen(&source, num, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
         }).to_string();
         write_file(&p, &replacements);
@@ -281,7 +275,6 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     // step 5: move the actual file
     let mut new_module_path = src_dir;
     new_module_path.push_str(&module_to_file_name(new_module, module_ext));
-    // FIXME don't overwrite!!
     if Path::new(&new_module_path).exists() {
         eprintln!("{}: destination module already exists.", "Error".red());
         exit(0x0001);
@@ -344,8 +337,8 @@ fn module_exists(config: &ProjectOwned, module: &str, extension: &str) -> (PathB
 fn move_function(config: &ProjectOwned, function: &str, old_module: &str, new_module: &str) {
 
     // step 1: confirm the modules exist
-    let (old_module_path, _) = module_exists(config, old_module, ".config");
-    let (new_module_path, _) = module_exists(config, new_module, ".config");
+    let (old_module_path, _) = module_exists(config, old_module, &config.config_extension);
+    let (new_module_path, _) = module_exists(config, new_module, &config.config_extension);
 
     // step 2: move the actual function
 
@@ -405,7 +398,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let config_project = get_config(&dir, ".hs", ".config");
+        let config_project = get_config(&dir, ".hs", ".cabal");
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());
@@ -425,7 +418,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let config_project = get_config(&dir, ".hs", ".config");
+        let config_project = get_config(&dir, ".hs", ".cabal");
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());

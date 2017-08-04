@@ -2,21 +2,21 @@
 rm -rf lens-4.15.3
 cabal unpack lens
 cd lens-4.15.3
-hr module . "Control.Lens.Internal.TH" "Control.Lens.Prismatic"
+hr module . "Control.Lens.Internal" "Control.Lens.Prismatic"
 cabal new-build
 cd ../
 rm -rf lens-4.15.3
-rm -rf dhall-1.5.0
-cabal unpack dhall
-cd dhall-1.5.0
-hr module . "Dhall.Import" "Dhall.Dependencies"
-cabal new-build
-cd ../
-rm -rf dhall-1.5.0
-rm -rf haskell-src-exts-1.19.1
-cabal unpack haskell-src-exts
-cd haskell-src-exts-1.19.1
-hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
-cabal new-build
-cd ../
-rm -rf haskell-src-exts-1.19.1
+#rm -rf dhall-1.5.0
+#cabal unpack dhall
+#cd dhall-1.5.0
+#hr module . "Dhall.Import" "Dhall.Dependencies"
+#cabal new-build
+#cd ../
+#rm -rf dhall-1.5.0
+#rm -rf haskell-src-exts-1.19.1
+#cabal unpack haskell-src-exts
+#cd haskell-src-exts-1.19.1
+#hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
+#cabal new-build
+#cd ../
+#rm -rf haskell-src-exts-1.19.1
