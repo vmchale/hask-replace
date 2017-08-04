@@ -2,7 +2,7 @@
 rm -rf lens-4.15.3
 cabal unpack lens
 cd lens-4.15.3
-hr module . "Control.Lens.Internal" "Control.Lens.Prismatic"
+hr module . "Control.Lens.Internal" "Control.Lens.Mine"
 cabal new-build
 cd ../
 rm -rf lens-4.15.3

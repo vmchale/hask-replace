@@ -1,4 +1,5 @@
 #!/usr/bin/env ion
+# TODO wrap output!!
 rm -rf test-nothing
 pi new haskell test-nothing
 cargo run -- module test-nothing "Lib" "NewLib.Nested"
