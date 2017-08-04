@@ -57,3 +57,14 @@ rustup run nightly cargo install hask-replace
 | lens | Rename module | 14.77ms |
 | dhall | Rename Module | 7.41 ms |
 | haskell-src-exts | Rename Module | 30.29 ms |
+
+## Use
+
+`hr` can also be used on Idris, viz.
+
+```bash
+git clone https://github.com/HuwCampbell/idris-lens.git
+cd idris-lens
+hr idris . Control.Lens.Maths Control.Lens.Math
+idris --build lens.ipkg
+```

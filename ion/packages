@@ -5,18 +5,24 @@ cd lens-4.15.3
 hr module . "Control.Lens.Internal" "Control.Lens.Mine"
 cabal new-build
 cd ../
-rm -rf lens-4.15.3
-#rm -rf dhall-1.5.0
-#cabal unpack dhall
-#cd dhall-1.5.0
-#hr module . "Dhall.Import" "Dhall.Dependencies"
-#cabal new-build
-#cd ../
-#rm -rf dhall-1.5.0
-#rm -rf haskell-src-exts-1.19.1
-#cabal unpack haskell-src-exts
-#cd haskell-src-exts-1.19.1
-#hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
-#cabal new-build
-#cd ../
-#rm -rf haskell-src-exts-1.19.1
+rm -rf lens-4.15.3 idris-lens
+git clone https://github.com/HuwCampbell/idris-lens.git
+cd idris-lens
+hr idris . Control.Lens.Maths Control.Lens.Math
+idris --build lens.ipkg
+cd ../
+rm -rf idris-lens
+rm -rf dhall-1.5.0
+cabal unpack dhall
+cd dhall-1.5.0
+hr module . "Dhall.Import" "Dhall.Dependencies"
+cabal new-build
+cd ../
+rm -rf dhall-1.5.0
+rm -rf haskell-src-exts-1.19.1
+cabal unpack haskell-src-exts
+cd haskell-src-exts-1.19.1
+hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
+cabal new-build
+cd ../
+rm -rf haskell-src-exts-1.19.1
