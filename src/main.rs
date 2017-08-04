@@ -22,15 +22,18 @@ use std::path::Path;
 use std::fmt::Debug;
 
 #[derive(Debug)]
+// TODO should encapsulate strings!
 struct ProjectOwned {
     pub dir: PathBuf,
-    pub cabal_file: PathBuf,
+    pub config_file: PathBuf,
+    pub module_extension: String,
+    pub config_extension: String,
 }
 
 impl ProjectOwned {
-    fn get_cabal_path(&self) -> String {
-        get_cabal(&self.dir)
-            .cabal_file
+    fn get_config_path(&self, module_ext: &str, config_ext: &str) -> String {
+        get_config(&self.dir, module_ext, config_ext)
+            .config_file
             .to_string_lossy()
             .to_string()
     }
@@ -57,33 +60,38 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
 }
 
 
-fn get_cabal(p: &PathBuf) -> ProjectOwned {
+fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
 
     let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
 
-    let mut vec = find_by_end_vec(p, ".cabal", Some(1));
+    let mut vec = find_by_end_vec(p, config_ext, Some(1));
     let vec_len = vec.len();
 
-    // if we find more than one cabal file, abort.
-    if vec_len > 1 {
+    // if we find more than one config file, abort.
+    if vec_len > 1 && config_ext == ".config" {
         eprintln!(
-            "{}: more than one '.cabal' file in indicated directory, aborting.",
+            "{}: more than one '{}' file in indicated directory, aborting.",
+            config_ext,
             "Error".red()
         );
         exit(0x0001)
     } else if vec_len == 0 {
         ProjectOwned {
             dir: parent.to_path_buf(),
-            cabal_file: p.clone(),
+            config_file: p.clone(),
+            module_extension: module_ext.to_string(),
+            config_extension: config_ext.to_string(),
         }
-    } else {
-        let cabal_name = vec.pop().unwrap();
+    } else { // FIXME filter out test config for idris
+        let config_name = vec.pop().unwrap();
         ProjectOwned {
             dir: PathBuf::from(s),
-            cabal_file: {
-                cabal_name
+            config_file: {
+                config_name
             },
+            module_extension: module_ext.to_string(),
+            config_extension: config_ext.to_string(),
         }
     }
 
@@ -97,7 +105,7 @@ fn get_dir(paths_from_cli: Option<&str>) -> &str {
     }
 }
 
-fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
+fn get_source_files(p: &PathBuf, extension: &str) -> Vec<PathBuf> {
 
     let s = p.to_string_lossy().to_string();
 
@@ -106,16 +114,16 @@ fn get_source_files(p: &PathBuf) -> Vec<PathBuf> {
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
         !path.starts_with(".stack-work") &&
-            p.file_name().to_string_lossy().to_string().ends_with(".hs")
+            p.file_name().to_string_lossy().to_string().ends_with(extension)
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
 
 }
 
-fn module_to_file_name(module: &str) -> String {
+fn module_to_file_name(module: &str, extension: &str) -> String {
     let mut replacements = module.replace(".", "/");
-    replacements.push_str(".hs");
+    replacements.push_str(extension);
     replacements
 }
 
@@ -128,8 +136,8 @@ fn get_yes() -> bool {
     }
 }
 
-fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
-    let dir: Vec<PathBuf> = get_source_files(&cabal.dir);
+fn rayon_directory_contents(config: &ProjectOwned, old_module: &str, new_module: &str, extension: &str) -> () {
+    let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
     // FIXME we filter the directory results twice
     let iter = dir.into_par_iter().filter(|p| {
         !p.starts_with(".stack-work") &&
@@ -137,7 +145,7 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
                 .unwrap()
                 .to_string_lossy()
                 .to_string()
-                .ends_with(".hs")
+                .ends_with(extension)
     });
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
@@ -152,11 +160,11 @@ fn rayon_directory_contents(cabal: &ProjectOwned, old_module: &str, new_module: 
         let replacements = re.replacen(&source, 0, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
         }).to_string();
-        write_file(&p, replacements);
+        write_file(&p, &replacements);
     })
 }
 
-fn write_file<P: AsRef<Path> + Debug>(p: P, s: String) -> () {
+fn write_file<P: AsRef<Path> + Debug>(p: P, s: &str) -> () {
 
     let mut file = match File::create(&p) {
         Ok(x) => x,
@@ -196,17 +204,19 @@ fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
     contents
 }
 
-fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
+fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
+    let module_ext: &str = &config.module_extension;
+    let config_ext: &str = &config.config_extension;
     // step 1: determine that the module we want to replace in fact exists
-    let mut old_module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(old_module), None);
+    let mut old_module_vec = find_by_end_vec(&config.dir, &module_to_file_name(old_module, module_ext), None);
     let old_module_exists = !(old_module_vec.is_empty());
 
     let (old_module_name, src_dir) = if old_module_exists {
         let name = old_module_vec.pop().unwrap();
         let name_string: String = name.to_string_lossy().to_string();
         let name_str: &str = name_string.as_str();
-        let old_string: String = module_to_file_name(old_module);
+        let old_string: String = module_to_file_name(old_module, module_ext);
         let old_str: &str = old_string.as_str();
         let dir: &str = name_str.trim_right_matches(old_str);
         (name, dir.to_string())
@@ -216,18 +226,18 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
     };
 
     // TODO make this a method
-    let cabal_string = cabal.get_cabal_path();
+    let config_string = config.get_config_path(module_ext, config_ext);
 
-    let contents = read_file(&cabal_string);
+    let contents = read_file(&config_string);
 
-    let in_cabal_file = (&contents).contains(old_module);
+    let in_config_file = (&contents).contains(old_module);
 
-    if !in_cabal_file {
+    if !in_config_file {
         eprintln!(
-            "{}: module '{}' not found in your cabal file '{}'",
+            "{}: module '{}' not found in your config file '{}'",
             "Warning".yellow(),
             old_module,
-            &cabal_string
+            &config_string
         );
     }
 
@@ -250,8 +260,8 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
         }
     }
 
-    // step 3: replace the module in the '.cabal' file
-    let source = read_file(&cabal_string);
+    // step 3: replace the module in the '.config' file
+    let source = read_file(&config_string);
     let mut old_module_regex = "(".to_string();
     old_module_regex.push_str(&old_module.replace(".", "\\."));
     old_module_regex.push_str(")+");
@@ -262,15 +272,15 @@ fn replace_all(cabal: &ProjectOwned, old_module: &str, new_module: &str) -> () {
         format!("{}{}", new_module, &caps[1])
     }).to_string();
 
-    write_file(&cabal_string, replacements);
+    write_file(&config_string, &replacements);
 
     // step 4: replace every 'import Module' with 'import NewModule'
-    rayon_directory_contents(cabal, old_module, new_module);
+    rayon_directory_contents(config, old_module, new_module, module_ext);
 
     // TODO copy a file only?
     // step 5: move the actual file
     let mut new_module_path = src_dir;
-    new_module_path.push_str(&module_to_file_name(new_module));
+    new_module_path.push_str(&module_to_file_name(new_module, module_ext));
     // FIXME don't overwrite!!
     if Path::new(&new_module_path).exists() {
         eprintln!("{}: destination module already exists.", "Error".red());
@@ -308,17 +318,17 @@ fn git_commit(src_dir: &str) -> () {
     }
 }
 
-fn module_exists(cabal: &ProjectOwned, module: &str) -> (PathBuf, String) {
+fn module_exists(config: &ProjectOwned, module: &str, extension: &str) -> (PathBuf, String) {
 
     // step 1: determine that the module to find the function in actually exists
-    let mut module_vec = find_by_end_vec(&cabal.dir, &module_to_file_name(module), None);
+    let mut module_vec = find_by_end_vec(&config.dir, &module_to_file_name(module, extension), None);
     let module_exists = !(module_vec.is_empty());
 
     let (module_name, src_dir) = if module_exists {
         let name = module_vec.pop().unwrap();
         let name_string: String = name.to_string_lossy().to_string();
         let name_str: &str = name_string.as_str();
-        let old_string: String = module_to_file_name(module);
+        let old_string: String = module_to_file_name(module, extension);
         let old_str: &str = old_string.as_str();
         let dir: &str = name_str.trim_right_matches(old_str);
         (name, dir.to_string())
@@ -331,11 +341,11 @@ fn module_exists(cabal: &ProjectOwned, module: &str) -> (PathBuf, String) {
 }
 
 
-fn move_function(cabal: &ProjectOwned, function: &str, old_module: &str, new_module: &str) {
+fn move_function(config: &ProjectOwned, function: &str, old_module: &str, new_module: &str) {
 
     // step 1: confirm the modules exist
-    let (old_module_path, _) = module_exists(cabal, old_module);
-    let (new_module_path, _) = module_exists(cabal, new_module);
+    let (old_module_path, _) = module_exists(config, old_module, ".config");
+    let (new_module_path, _) = module_exists(config, new_module, ".config");
 
     // step 2: move the actual function
 
@@ -354,10 +364,10 @@ fn move_function(cabal: &ProjectOwned, function: &str, old_module: &str, new_mod
     let func_str = &old[i..j];
     let mut new = read_file(&new_module_path);
     new.push_str(func_str);
-    write_file(new_module_path, new);
+    write_file(new_module_path, &new);
     let mut old_write = (&old[..i]).to_string(); // TODO check this slice on byte indices
     old_write.push_str(&old[j..]);
-    write_file(old_module_path, old_write);
+    write_file(old_module_path, &old_write);
 
     // step 3: remove the function from the list of explicit exports of the first module if
     // necessary, and add it to the list of explicit exports of the second if necessary
@@ -395,15 +405,15 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let cabal_project = get_cabal(&dir);
+        let config_project = get_config(&dir, ".hs", ".config");
 
         if command.is_present("stash") {
-            git_commit(&cabal_project.dir.to_string_lossy().to_string());
+            git_commit(&config_project.dir.to_string_lossy().to_string());
         }
 
         let function = command.value_of("function").unwrap();
 
-        move_function(&cabal_project, function, old_module, new_module);
+        move_function(&config_project, function, old_module, new_module);
 
     } else if let Some(command) = matches.subcommand_matches("module") {
 
@@ -415,13 +425,31 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let cabal_project = get_cabal(&dir);
+        let config_project = get_config(&dir, ".hs", ".config");
 
         if command.is_present("stash") {
-            git_commit(&cabal_project.dir.to_string_lossy().to_string());
+            git_commit(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&cabal_project, old_module, new_module);
+        replace_all(&config_project, old_module, new_module);
+
+    } else if let Some(command) = matches.subcommand_matches("idris") {
+
+        let dir_string = get_dir(command.value_of("project"));
+
+        let dir = PathBuf::from(dir_string);
+
+        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
+
+        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
+
+        let config_project = get_config(&dir, ".idr", ".ipkg");
+
+        if command.is_present("stash") {
+            git_commit(&config_project.dir.to_string_lossy().to_string());
+        }
+
+        replace_all(&config_project, old_module, new_module);
 
     } else {
         eprintln!("{}: failed to supply a subcommand", "Error".red());

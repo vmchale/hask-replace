@@ -6,4 +6,10 @@ cd test-nothing
 stack test
 #exa -T
 cd ../
-rm -rf test-nothing
+rm -rf test-nothing nothing
+pi new idris nothing
+cargo run -- idris nothing "Lib" "NewLib.Nested"
+cd nothing
+idris --build nothing.ipkg
+cd ../
+rm -rf nothing
