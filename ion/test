@@ -4,12 +4,13 @@ pi new haskell test-nothing
 cargo run -- module test-nothing "Lib" "NewLib.Nested"
 cd test-nothing
 stack test
-#exa -T
+exa -T
 cd ../
 rm -rf test-nothing nothing
 pi new idris nothing
 cargo run -- idris nothing "Lib" "NewLib.Nested"
 cd nothing
 idris --build nothing.ipkg
+exa -T
 cd ../
 rm -rf nothing

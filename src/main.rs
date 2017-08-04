@@ -148,7 +148,7 @@ fn rayon_directory_contents(config: &ProjectOwned, old_module: &str, new_module:
         old_module_regex.push_str(&old_module.replace(".", "\\."));
         old_module_regex.push_str(")+");
         let mut old_module_regex = old_module.to_string();
-        old_module_regex.push_str("(\n|\\(|( *) \\(|( *) where|\\.)+?");
+        old_module_regex.push_str("(\n|( +)\\(|( +)where)+?");
         let re = Regex::new(&old_module_regex).unwrap();
         let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
         let replacements = re.replacen(&source, num, |caps: &Captures| {
@@ -254,7 +254,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         }
     }
 
-    // step 3: replace the module in the '.config' file
+    // step 3: replace the module in the '.cabal' file
     let source = read_file(&config_string);
     let mut old_module_regex = "(".to_string();
     old_module_regex.push_str(&old_module.replace(".", "\\."));
