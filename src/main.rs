@@ -65,7 +65,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
     let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
 
-    let mut vec = find_by_end_vec(p, config_ext, Some(1));
+    let vec = find_by_end_vec(p, config_ext, Some(1));
     let vec_len = vec.len();
 
     // if we find more than one config file, abort.
@@ -83,8 +83,12 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
             module_extension: module_ext.to_string(),
             config_extension: config_ext.to_string(),
         }
-    } else { // FIXME filter out test config for idris
-        let config_name = vec.pop().unwrap();
+    } else {
+        let config_name = vec.into_iter()
+            .filter(|p| p.to_string_lossy() != "test.ipkg")
+            .collect::<Vec<PathBuf>>()
+            .pop()
+            .unwrap();
         ProjectOwned {
             dir: PathBuf::from(s),
             config_file: {
@@ -114,7 +118,9 @@ fn get_source_files(p: &PathBuf, extension: &str) -> Vec<PathBuf> {
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
         !path.starts_with(".stack-work") &&
-            p.file_name().to_string_lossy().to_string().ends_with(extension)
+            p.file_name().to_string_lossy().to_string().ends_with(
+                extension,
+            )
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
@@ -136,7 +142,12 @@ fn get_yes() -> bool {
     }
 }
 
-fn rayon_directory_contents(config: &ProjectOwned, old_module: &str, new_module: &str, extension: &str) -> () {
+fn rayon_directory_contents(
+    config: &ProjectOwned,
+    old_module: &str,
+    new_module: &str,
+    extension: &str,
+) -> () {
     let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
     // FIXME we filter the directory results twice
     let iter = dir.into_par_iter();
@@ -203,7 +214,11 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     let module_ext: &str = &config.module_extension;
     let config_ext: &str = &config.config_extension;
     // step 1: determine that the module we want to replace in fact exists
-    let mut old_module_vec = find_by_end_vec(&config.dir, &module_to_file_name(old_module, module_ext), None);
+    let mut old_module_vec = find_by_end_vec(
+        &config.dir,
+        &module_to_file_name(old_module, module_ext),
+        None,
+    );
     let old_module_exists = !(old_module_vec.is_empty());
 
     let (old_module_name, src_dir) = if old_module_exists {
@@ -314,7 +329,8 @@ fn git_commit(src_dir: &str) -> () {
 fn module_exists(config: &ProjectOwned, module: &str, extension: &str) -> (PathBuf, String) {
 
     // step 1: determine that the module to find the function in actually exists
-    let mut module_vec = find_by_end_vec(&config.dir, &module_to_file_name(module, extension), None);
+    let mut module_vec =
+        find_by_end_vec(&config.dir, &module_to_file_name(module, extension), None);
     let module_exists = !(module_vec.is_empty());
 
     let (module_name, src_dir) = if module_exists {
