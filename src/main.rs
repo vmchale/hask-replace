@@ -85,7 +85,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
         }
     } else {
         let config_name = vec.into_iter()
-            .filter(|p| p.to_string_lossy() == "test.ipkg")
+            .filter(|p| p.to_string_lossy() != "test.ipkg")
             .collect::<Vec<PathBuf>>()
             .pop()
             .unwrap();
