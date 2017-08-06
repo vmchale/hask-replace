@@ -85,7 +85,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
         }
     } else {
         let config_name = vec.into_iter()
-            .filter(|p| p.to_string_lossy() != "test.ipkg")
+            .filter(|p| p.to_string_lossy() == "test.ipkg")
             .collect::<Vec<PathBuf>>()
             .pop()
             .unwrap();
@@ -361,10 +361,12 @@ fn move_function(config: &ProjectOwned, function: &str, old_module: &str, new_mo
     // create the regex for the (top-level) function
     let mut regex_str: String = "\n".to_string();
     regex_str.push_str(function);
-    regex_str.push_str("( *::.*\n)?");
+    regex_str.push_str("( *:.*\n)?");
     regex_str.push_str(function);
     regex_str.push_str("(.*\n)?");
     let re = Regex::new(&regex_str).unwrap();
+
+    // use nom for find and replace??
 
     // write the stuff
     let old = read_file(&old_module_path);

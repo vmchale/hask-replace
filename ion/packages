@@ -1,11 +1,11 @@
 #!/usr/bin/env ion
-rm -rf lens-4.15.3
+rm -rf lens-4.15.4
 cabal unpack lens
-cd lens-4.15.3
+cd lens-4.15.4
 hr module . "Control.Lens.Internal" "Control.Lens.Mine"
 cabal new-build
 cd ../
-rm -rf lens-4.15.3 idris-lens
+rm -rf lens-4.15.4 idris-lens
 git clone https://github.com/HuwCampbell/idris-lens.git
 cd idris-lens
 hr idris . Control.Lens.Maths Control.Lens.Math
