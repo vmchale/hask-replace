@@ -2,39 +2,39 @@ name: hask-replace
 author: Vanessa McHale <vanessa.mchale@reconfigure.io>
 about: Rename modules and functions across Haskell projects
 subcommands:
-    - function:
-        visible_alias: "f"
-        about: Move a function between modules
-        args:
-            - function:
-                value_name: FUNCTION
-                index: 1
-                required: true
-                help: Name of function you wish to move
-            - project:
-                value_name: PROJECT
-                index: 2
-                help: "Directory or '.cabal' file for the project"
-            - prompt:
-                long: prompt
-                short: p
-                help: Prompt before overwriting file
-            - stash:
-                short: s
-                long: stash
-                help: Commit using git before making any changes
-            - old:
-                long: old
-                short: o
-                required: true
-                value_name: OLD_MODULE
-                help: Module in which the function is located
-            - new:
-                long: new
-                short: n
-                required: true
-                value_name: NEW_MODULE
-                help: Module we wish to move the function to
+    #- function:
+    #    visible_alias: "f"
+    #    about: Move a function between modules
+    #    args:
+    #        - function:
+    #            value_name: FUNCTION
+    #            index: 1
+    #            required: true
+    #            help: Name of function you wish to move
+    #        - project:
+    #            value_name: PROJECT
+    #            index: 2
+    #            help: "Directory or '.cabal' file for the project"
+    #        - prompt:
+    #            long: prompt
+    #            short: p
+    #            help: Prompt before overwriting file
+    #        - stash:
+    #            short: s
+    #            long: stash
+    #            help: Commit using git before making any changes
+    #        - old:
+    #            long: old
+    #            short: o
+    #            required: true
+    #            value_name: OLD_MODULE
+    #            help: Module in which the function is located
+    #        - new:
+    #            long: new
+    #            short: n
+    #            required: true
+    #            value_name: NEW_MODULE
+    #            help: Module we wish to move the function to
     - module:
         visible_alias: "m"
         about: Replace a module across a project
