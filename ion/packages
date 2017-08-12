@@ -2,7 +2,7 @@
 rm -rf lens-4.15.4
 cabal unpack lens
 cd lens-4.15.4
-hr module . "Control.Lens.Internal" "Control.Lens.Mine" --copy
+hr module . "Control.Lens.Internal" "Control.Lens.Mine"
 cabal new-build
 cd ../
 rm -rf lens-4.15.4 idris-lens
@@ -12,13 +12,13 @@ hr idris . Control.Lens.Maths Control.Lens.Math
 idris --build lens.ipkg
 cd ../
 rm -rf idris-lens
-rm -rf dhall-1.5.0
+rm -rf dhall-1.5.1
 cabal unpack dhall
-cd dhall-1.5.0
+cd dhall-1.5.1
 hr module . "Dhall.Import" "Dhall.Dependencies"
 cabal new-build
 cd ../
-rm -rf dhall-1.5.0
+rm -rf dhall-1.5.1
 rm -rf haskell-src-exts-1.19.1
 cabal unpack haskell-src-exts
 cd haskell-src-exts-1.19.1

@@ -162,7 +162,7 @@ fn rayon_directory_contents(
         old_module_regex.push_str(&old_module.replace(".", "\\."));
         old_module_regex.push_str(")+");
         let mut old_module_regex = old_module.to_string();
-        old_module_regex.push_str("(\n|( +)exposing.*\n|( +)\\(|( +)where)+?");
+        old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
         let re = Regex::new(&old_module_regex).unwrap();
         let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
         let replacements = re.replacen(&source, num, |caps: &Captures| {

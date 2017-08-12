@@ -21,6 +21,7 @@
   - [x] have to run it from the parent directory
   - [x] Overzealous matches when replacing
   - [ ] shouldn't give package warning for Elm
-  - [ ] shouldn't generate too many directories
+  - [x] shouldn't generate too many directories
+  - [ ] bug with `--copy` and lens.
 # Code Maintenance
   - [ ] Replace regular expressions with a real parser
