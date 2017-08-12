@@ -19,6 +19,6 @@ pi new elm nothing
 cargo run -- elm nothing "Update" "Update.Nested.Mod"
 cd nothing
 elm-make src/main.elm --yes
-exa -T --exclude "elm-stuff"
+exa -TI "elm-stuff"
 cd ../
 rm -rf nothing/

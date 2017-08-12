@@ -289,7 +289,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         }).to_string()
     } else {
         re.replacen(&source, 2, |caps: &Captures| {
-            format!("{}{}\n{}{}", new_module, &caps[1], old_module, &caps[1])
+            format!("{}{}, {}{}", new_module, &caps[1], old_module, &caps[1])
         }).to_string()
     };
 
