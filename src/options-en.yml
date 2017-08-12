@@ -66,6 +66,9 @@ subcommands:
                 short: c
                 long: copy
                 help: Copy a module rather than moving it.
+            - spec:
+                long: with-spec
+                help: Move test modules as well as the module itself.
     - idris:
         visible_alias: "i"
         about: Replace a module across a project

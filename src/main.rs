@@ -469,6 +469,14 @@ fn main() {
 
         replace_all(&config_project, old_module, new_module);
 
+        if command.is_present("spec") {
+            let mut old_module_owned = old_module.to_string();
+            let mut new_module_owned = new_module.to_string();
+            old_module_owned.push_str("Spec");
+            new_module_owned.push_str("Spec");
+            replace_all(&config_project, &old_module_owned, &new_module_owned);
+        }
+
     } else if let Some(command) = matches.subcommand_matches("idris") {
 
         let dir_string = get_dir(command.value_of("project"));

@@ -11,9 +11,11 @@
 # Features
   - [ ] move functions between modules
   - [x] move Idris module
-  - [ ] move Elm module
+  - [x] move Elm module
   - [x] copy a module
   - [ ] add a module
+    - [ ] mustache templates
+  - [ ] add a function to the export list if it is present
   ~~- [ ] rename a function across modules~~
 # Bugs
   - [x] have to run it from the parent directory
