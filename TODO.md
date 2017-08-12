@@ -12,10 +12,13 @@
   - [ ] move functions between modules
   - [x] move Idris module
   - [ ] move Elm module
+  - [x] copy a module
   - [ ] add a module
   ~~- [ ] rename a function across modules~~
 # Bugs
   - [x] have to run it from the parent directory
   - [x] Overzealous matches when replacing
+  - [ ] shouldn't give package warning for Elm
+  - [ ] shouldn't generate too many directories
 # Code Maintenance
   - [ ] Replace regular expressions with a real parser

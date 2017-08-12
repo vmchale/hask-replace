@@ -24,6 +24,7 @@ use std::fmt::Debug;
 #[derive(Debug)]
 // TODO should encapsulate strings!
 struct ProjectOwned {
+    pub copy: bool,
     pub dir: PathBuf,
     pub config_file: PathBuf,
     pub module_extension: String,
@@ -32,7 +33,7 @@ struct ProjectOwned {
 
 impl ProjectOwned {
     fn get_config_path(&self, module_ext: &str, config_ext: &str) -> String {
-        get_config(&self.dir, module_ext, config_ext)
+        get_config(&self.dir, module_ext, config_ext, self.copy)
             .config_file
             .to_string_lossy()
             .to_string()
@@ -60,7 +61,7 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
 }
 
 
-fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
+fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str, copy: bool) -> ProjectOwned {
 
     let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
@@ -78,6 +79,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
         exit(0x0001)
     } else if vec_len == 0 {
         ProjectOwned {
+            copy: copy,
             dir: parent.to_path_buf(),
             config_file: p.clone(),
             module_extension: module_ext.to_string(),
@@ -90,6 +92,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str) -> ProjectOwned {
             .pop()
             .unwrap();
         ProjectOwned {
+            copy: copy,
             dir: PathBuf::from(s),
             config_file: {
                 config_name
@@ -159,7 +162,7 @@ fn rayon_directory_contents(
         old_module_regex.push_str(&old_module.replace(".", "\\."));
         old_module_regex.push_str(")+");
         let mut old_module_regex = old_module.to_string();
-        old_module_regex.push_str("(\n|( +)\\(|( +)where)+?");
+        old_module_regex.push_str("(\n|( +)exposing.*\n|( +)\\(|( +)where)+?");
         let re = Regex::new(&old_module_regex).unwrap();
         let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
         let replacements = re.replacen(&source, num, |caps: &Captures| {
@@ -213,6 +216,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     let module_ext: &str = &config.module_extension;
     let config_ext: &str = &config.config_extension;
+
     // step 1: determine that the module we want to replace in fact exists
     let mut old_module_vec = find_by_end_vec(
         &config.dir,
@@ -252,7 +256,9 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 2: determine the targeted directory in fact exists, or make it ourselves.
     let vref: String = new_module.replace(".", "/");
-    let v: Vec<&str> = vref.split('/').collect();
+    let pre_v: Vec<&str> = vref.split('/').collect();
+    let l = (&pre_v).len();
+    let v: Vec<&str> = pre_v.into_iter().take(l - 1).collect();
     let mut target_directory: String = src_dir.clone();
     target_directory.push_str(&v.join("/"));
     if !PathBuf::from(&target_directory).exists() {
@@ -277,9 +283,15 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     let mut old_module_regex = old_module.to_string();
     old_module_regex.push_str("(\n|,)+?");
     let re = Regex::new(&old_module_regex).unwrap();
-    let replacements = re.replacen(&source, 2, |caps: &Captures| {
-        format!("{}{}", new_module, &caps[1])
-    }).to_string();
+    let replacements = if !config.copy {
+        re.replacen(&source, 2, |caps: &Captures| {
+            format!("{}{}", new_module, &caps[1])
+        }).to_string()
+    } else {
+        re.replacen(&source, 2, |caps: &Captures| {
+            format!("{}{}\n{}{}", new_module, &caps[1], old_module, &caps[1])
+        }).to_string()
+    };
 
     write_file(&config_string, &replacements);
 
@@ -294,7 +306,14 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         eprintln!("{}: destination module already exists.", "Error".red());
         exit(0x0001);
     }
-    if let Ok(s) = fs::rename(&old_module_name, &new_module_path) {
+
+    let expr = if !config.copy {
+        fs::rename(&old_module_name, &new_module_path)
+    } else {
+        fs::copy(&old_module_name, &new_module_path).map(|_| ())
+    };
+
+    if let Ok(s) = expr {
         s
     } else {
         eprintln!(
@@ -422,7 +441,7 @@ fn main() {
             ".cabal"
         };
 
-        let config_project = get_config(&dir, ".hs", ".cabal");
+        let config_project = get_config(&dir, ".hs", &extension, command.is_present("copy"));
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());
@@ -442,7 +461,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let config_project = get_config(&dir, ".hs", ".cabal");
+        let config_project = get_config(&dir, ".hs", ".cabal", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());
@@ -460,7 +479,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let config_project = get_config(&dir, ".idr", ".ipkg");
+        let config_project = get_config(&dir, ".idr", ".ipkg", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());
@@ -478,7 +497,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
-        let config_project = get_config(&dir, ".elm", ".json");
+        let config_project = get_config(&dir, ".elm", ".json", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());

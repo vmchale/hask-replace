@@ -62,6 +62,10 @@ subcommands:
                 short: y
                 long: hpack
                 help: "Flag to be used when the project uses an 'hpack.yaml' file rather than a '.cabal' file."
+            - copy:
+                short: c
+                long: copy
+                help: Copy a module rather than moving it.
     - idris:
         visible_alias: "i"
         about: Replace a module across a project
@@ -85,6 +89,10 @@ subcommands:
                 index: 3
                 required: true
                 help: Name of the new module
+            - copy:
+                short: c
+                long: copy
+                help: Copy a module rather than moving it.
     - elm:
         visible_alias: "e"
         about: Replace a module across a project
@@ -108,3 +116,7 @@ subcommands:
                 index: 3
                 required: true
                 help: Name of the new module
+            - copy:
+                short: c
+                long: copy
+                help: Copy a module rather than moving it.
