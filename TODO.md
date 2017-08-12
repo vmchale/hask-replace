@@ -7,9 +7,11 @@
     - [ ] nice diff output like vim-hare
   - [ ] should optionally move spec files as well
   - [ ] allow user to input module name or file name
+  - [ ] git stash instead of git commit? make it automatic, ideally.
 # Features
   - [ ] move functions between modules
-  - [ ] move Idris module
+  - [x] move Idris module
+  - [ ] move Elm module
   - [ ] add a module
   ~~- [ ] rename a function across modules~~
 # Bugs

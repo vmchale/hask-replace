@@ -416,6 +416,12 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
+        let extension = if command.is_present("hpack") {
+            ".yaml"
+        } else {
+            ".cabal"
+        };
+
         let config_project = get_config(&dir, ".hs", ".cabal");
 
         if command.is_present("stash") {
@@ -455,6 +461,24 @@ fn main() {
         let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
 
         let config_project = get_config(&dir, ".idr", ".ipkg");
+
+        if command.is_present("stash") {
+            git_commit(&config_project.dir.to_string_lossy().to_string());
+        }
+
+        replace_all(&config_project, old_module, new_module);
+
+    } else if let Some(command) = matches.subcommand_matches("elm") {
+
+        let dir_string = get_dir(command.value_of("project"));
+
+        let dir = PathBuf::from(dir_string);
+
+        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
+
+        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
+
+        let config_project = get_config(&dir, ".elm", ".json");
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());

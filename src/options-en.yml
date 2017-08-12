@@ -58,6 +58,10 @@ subcommands:
                 index: 3
                 required: true
                 help: Name of the new module
+            - hpack:
+                short: y
+                long: hpack
+                help: "Flag to be used when the project uses an 'hpack.yaml' file rather than a '.cabal' file."
     - idris:
         visible_alias: "i"
         about: Replace a module across a project
@@ -67,6 +71,29 @@ subcommands:
                 index: 1
                 required: true
                 help: "Directory or '.ipkg' file for the project"
+            - stash:
+                short: s
+                long: stash
+                help: Commit using git before making any changes
+            - old:
+                value_name: OLD_MODULE
+                index: 2
+                required: true
+                help: Name of old module
+            - new:
+                value_name: NEW_MODULE
+                index: 3
+                required: true
+                help: Name of the new module
+    - elm:
+        visible_alias: "e"
+        about: Replace a module across a project
+        args:
+            - project:
+                value_name: PROJECT
+                index: 1
+                required: true
+                help: "Directory or 'elm-package.json' file for the project"
             - stash:
                 short: s
                 long: stash

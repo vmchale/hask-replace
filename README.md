@@ -18,7 +18,8 @@ cabal new-build
 ```
 
 As you can see, it's a lot less painful than whatever witchcraft you'd have to
-resort to to accomplish the same thing in bash.
+resort to to accomplish the same thing in bash. Oh, and it also works for Idris
+and Elm.
 
 ## Installation
 
