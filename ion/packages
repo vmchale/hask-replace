@@ -19,10 +19,3 @@ hr module . "Dhall.Import" "Dhall.Dependencies"
 cabal new-build
 cd ../
 rm -rf dhall-1.5.1
-rm -rf haskell-src-exts-1.19.1
-cabal unpack haskell-src-exts
-cd haskell-src-exts-1.19.1
-hr module . "Language.Haskell.Exts.Build" "Language.Haskell.Exts.Rekt"
-cabal new-build
-cd ../
-rm -rf haskell-src-exts-1.19.1

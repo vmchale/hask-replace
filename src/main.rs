@@ -158,9 +158,6 @@ fn rayon_directory_contents(
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let mut old_module_regex = "(".to_string();
-        old_module_regex.push_str(&old_module.replace(".", "\\."));
-        old_module_regex.push_str(")+");
         let mut old_module_regex = old_module.to_string();
         old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
         let re = Regex::new(&old_module_regex).unwrap();
@@ -277,9 +274,6 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 3: replace the module in the '.cabal' file
     let source = read_file(&config_string);
-    let mut old_module_regex = "(".to_string();
-    old_module_regex.push_str(&old_module.replace(".", "\\."));
-    old_module_regex.push_str(")+");
     let mut old_module_regex = old_module.to_string();
     old_module_regex.push_str("(\n|,)+?");
     let re = Regex::new(&old_module_regex).unwrap();
