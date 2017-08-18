@@ -1,7 +1,5 @@
 #[macro_use]
 extern crate clap;
-#[macro_use]
-extern crate text_io;
 extern crate rayon;
 extern crate colored;
 extern crate regex;
@@ -136,15 +134,6 @@ fn module_to_file_name(module: &str, extension: &str) -> String {
     replacements
 }
 
-fn get_yes() -> bool {
-    let s: String = read!("[y/n]: {}");
-    let s2: &str = &s;
-    match s2 {
-        "Yes" | "Y" | "y" | "yes" => true,
-        _ => false,
-    }
-}
-
 fn rayon_directory_contents(
     config: &ProjectOwned,
     old_module: &str,
@@ -242,7 +231,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     let in_config_file = (&contents).contains(old_module);
 
-    if !in_config_file {
+    if !in_config_file && config.config_extension != ".json" {
         eprintln!(
             "{}: module '{}' not found in your config file '{}'",
             "Warning".yellow(),
@@ -283,7 +272,8 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         }).to_string()
     } else {
         re.replacen(&source, 2, |caps: &Captures| {
-            format!("{}{}, {}{}", new_module, &caps[1], old_module, &caps[1])
+            let filtered_caps: String = (&caps[1]).to_string().chars().filter(|c| c != &'\n').collect();
+            format!("{}{}, {}{}", new_module, &filtered_caps, old_module, &caps[1]) // FIXME this should be handled differently! This is bad.
         }).to_string()
     };
 
@@ -435,7 +425,7 @@ fn main() {
             ".cabal"
         };
 
-        let config_project = get_config(&dir, ".hs", &extension, command.is_present("copy"));
+        let config_project = get_config(&dir, ".hs", extension, command.is_present("copy"));
 
         if command.is_present("stash") {
             git_commit(&config_project.dir.to_string_lossy().to_string());

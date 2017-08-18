@@ -1,27 +1,25 @@
 [package]
-name = "hask-replace"
-version = "0.4.1"
 authors = ["Vanessa McHale <vanessa.mchale@reconfigure.io>"]
-license-file = "LICENSE"
 description = "Rename haskell modules at the speed of Rust"
-repository = "https://github.com/vmchale/hask-replace"
 documentation = "https://github.com/vmchale/hask-replace#README"
 homepage = "https://github.com/vmchale/hask-replace"
-
-[profile.release]
-lto = true
+license-file = "LICENSE"
+name = "hask-replace"
+repository = "https://github.com/vmchale/hask-replace"
+version = "0.4.1"
 
 [[bin]]
 name = "hr"
 path = "src/main.rs"
 
 [dependencies]
-rayon = "0.8"
-walkdir = "1.0"
-text_io = "0.1"
-colored = "1.5"
-regex = "0.2"
+colored = "1.5.2"
+rayon = "0.8.2"
+regex = "0.2.2"
+walkdir = "1.0.7"
 
 [dependencies.clap]
-version = "2.25"
 features = ["yaml"]
+version = "2.26.0"
+[profile.release]
+lto = true

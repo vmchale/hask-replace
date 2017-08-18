@@ -13,6 +13,9 @@
   - [x] move Idris module
   - [x] move Elm module
   - [x] copy a module
+    - [ ] shouldn't do replacements everywhere.
+    - [ ] .cabal file needs to be handled better.
+  - [ ] move a directory structure
   - [ ] add a module
     - [ ] mustache templates
   - [ ] add a function to the export list if it is present
