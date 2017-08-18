@@ -134,28 +134,47 @@ fn module_to_file_name(module: &str, extension: &str) -> String {
     replacements
 }
 
+fn replace_file(p: &PathBuf, old_module: &str, new_module: &str, extension: &str) -> () {
+
+    let mut source_file = File::open(p).expect("139");
+    let mut source = String::new();
+    source_file.read_to_string(&mut source).expect("141");
+    let mut old_module_regex = old_module.to_string();
+    old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    let re = Regex::new(&old_module_regex).unwrap();
+    let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
+    let replacements = re.replacen(&source, num, |caps: &Captures| {
+        format!("{}{}", new_module, &caps[1])
+    }).to_string();
+    write_file(p, &replacements);
+
+}
+
 fn rayon_directory_contents(
     config: &ProjectOwned,
     old_module: &str,
     new_module: &str,
     extension: &str,
 ) -> () {
+
     let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
-    // FIXME we filter the directory results twice
     let iter = dir.into_par_iter();
+    let mut old_module_regex = old_module.to_string();
+    old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    let re = Regex::new(&old_module_regex).unwrap();
+
     iter.for_each(|p| {
+        println!("{:?}", &p);
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let mut old_module_regex = old_module.to_string();
-        old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
-        let re = Regex::new(&old_module_regex).unwrap();
         let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
         let replacements = re.replacen(&source, num, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
         }).to_string();
         write_file(&p, &replacements);
     })
+
 }
 
 fn write_file<P: AsRef<Path> + Debug>(p: P, s: &str) -> () {
@@ -280,7 +299,9 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     write_file(&config_string, &replacements);
 
     // step 4: replace every 'import Module' with 'import NewModule'
-    rayon_directory_contents(config, old_module, new_module, module_ext);
+    if !config.copy {
+        rayon_directory_contents(config, old_module, new_module, module_ext);
+    }
 
     // TODO copy a file only?
     // step 5: move the actual file
@@ -296,6 +317,16 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     } else {
         fs::copy(&old_module_name, &new_module_path).map(|_| ())
     };
+
+    if config.copy {
+
+        let mut file_name: PathBuf = (&config).dir.to_owned();
+        file_name.push("src/");
+        file_name.push(module_to_file_name(new_module, module_ext));
+        println!("{:?}", file_name);
+        replace_file(&file_name, old_module, new_module, module_ext);
+
+    }
 
     if let Ok(s) = expr {
         s
