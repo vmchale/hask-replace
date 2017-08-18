@@ -69,3 +69,9 @@ cd idris-lens
 hr idris . Control.Lens.Maths Control.Lens.Math
 idris --build lens.ipkg
 ```
+
+### Vim Plugin
+
+There is a vim plugin for hask-replace
+[here](https://github.com/vmchale/hask-replace-vim). It supports copying and
+moving Haskell, Elm, and Idris modules.
