@@ -7,18 +7,18 @@ cd test-nothing &&
 stack test &&
 exa -T &&
 cd ../ &&
-rm -rf test-nothing nothing
-#pi new idris nothing
-#cargo run -- idris nothing "Lib" "NewLib.Nested"
-#cd nothing
-#idris --build nothing.ipkg
-#exa -T
-#cd ../
-#rm -rf nothing
-#pi new elm nothing
-#cargo run -- elm nothing "Update" "Update.Nested.Mod"
-#cd nothing
-#elm-make src/main.elm --yes
-#exa -TI "elm-stuff"
-#cd ../
-#rm -rf nothing/
+rm -rf test-nothing nothing &&
+pi new idris nothing &&
+cargo run -- idris nothing "Lib" "NewLib.Nested" &&
+cd nothing &&
+idris --build nothing.ipkg &&
+exa -T &&
+cd ../ &&
+rm -rf nothing &&
+pi new elm nothing &&
+cargo run -- elm nothing "Update" "Update.Nested.Mod" &&
+cd nothing &&
+elm-make src/main.elm --yes &&
+exa -TI "elm-stuff" &&
+cd ../ &&
+rm -rf nothing/

@@ -164,7 +164,6 @@ fn rayon_directory_contents(
     let re = Regex::new(&old_module_regex).unwrap();
 
     iter.for_each(|p| {
-        println!("{:?}", &p);
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
@@ -323,7 +322,6 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         let mut file_name: PathBuf = (&config).dir.to_owned();
         file_name.push("src/");
         file_name.push(module_to_file_name(new_module, module_ext));
-        println!("{:?}", file_name);
         replace_file(&file_name, old_module, new_module, module_ext);
 
     }
