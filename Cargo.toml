@@ -15,11 +15,15 @@ path = "src/main.rs"
 [dependencies]
 colored = "1.5.2"
 rayon = "0.8.2"
-regex = "0.2.2"
 walkdir = "1.0.7"
+
+[dependencies.regex]
+features = ["simd-accel"]
+version = "0.2"
 
 [dependencies.clap]
 features = ["yaml"]
 version = "2.26.0"
+
 [profile.release]
 lto = true

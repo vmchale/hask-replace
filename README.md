@@ -12,13 +12,13 @@ Here's an example of how you would use `hr`:
 
 ```bash
 cabal unpack dhall
-cd dhall-1.5.0
+cd dhall-1.5.1/
 hr module . "Dhall.Import" "Dhall.Dependencies"
 cabal new-build
 ```
 
 As you can see, it's a lot less painful than whatever witchcraft you'd have to
-resort to to accomplish the same thing in bash. Not only that, it also works for Idris
+resort to to accomplish the same thing in bash. Not only that, it works for Idris
 and Elm too.
 
 ## Installation

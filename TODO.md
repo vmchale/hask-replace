@@ -19,7 +19,7 @@
   - [ ] add a module
     - [ ] mustache templates (?)
     - [ ] would need some kind of parser
-  - [ ] add a function to the export list if it is present
+  ~~- [ ] add a function to the export list if it is present~~
   ~~- [ ] rename a function across modules~~
 # Bugs
   - [x] have to run it from the parent directory

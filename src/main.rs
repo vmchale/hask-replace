@@ -134,13 +134,23 @@ fn module_to_file_name(module: &str, extension: &str) -> String {
     replacements
 }
 
-fn replace_file(p: &PathBuf, old_module: &str, new_module: &str, extension: &str) -> () {
+fn replace_file(
+    p: &PathBuf,
+    old_module: &str,
+    new_module: &str,
+    extension: &str,
+    whole_directory: bool,
+) -> () {
 
     let mut source_file = File::open(p).expect("139");
     let mut source = String::new();
     source_file.read_to_string(&mut source).expect("141");
     let mut old_module_regex = old_module.to_string();
-    old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    if !whole_directory {
+        old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    } else {
+        old_module_regex.push_str("(\n|\\.[a-zA-Z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    }
     let re = Regex::new(&old_module_regex).unwrap();
     let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
     let replacements = re.replacen(&source, num, |caps: &Captures| {
@@ -155,12 +165,17 @@ fn rayon_directory_contents(
     old_module: &str,
     new_module: &str,
     extension: &str,
+    whole_directory: bool,
 ) -> () {
 
     let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
     let iter = dir.into_par_iter();
     let mut old_module_regex = old_module.to_string();
-    old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    if !whole_directory {
+        old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    } else {
+        old_module_regex.push_str("(\n|\\.[a-zA-Z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+    }
     let re = Regex::new(&old_module_regex).unwrap();
 
     iter.for_each(|p| {
@@ -242,7 +257,6 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         exit(0x0001);
     };
 
-    // TODO make this a method
     let config_string = config.get_config_path(module_ext, config_ext);
 
     let contents = read_file(&config_string);
@@ -290,8 +304,18 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         }).to_string()
     } else {
         re.replacen(&source, 2, |caps: &Captures| {
-            let filtered_caps: String = (&caps[1]).to_string().chars().filter(|c| c != &'\n').collect();
-            format!("{}{}, {}{}", new_module, &filtered_caps, old_module, &caps[1]) // FIXME this should be handled differently! This is bad.
+            let filtered_caps: String = (&caps[1])
+                .to_string()
+                .chars()
+                .filter(|c| c != &'\n')
+                .collect();
+            format!(
+                "{}{}, {}{}",
+                new_module,
+                &filtered_caps,
+                old_module,
+                &caps[1]
+            ) // FIXME this should be handled differently! This is bad.
         }).to_string()
     };
 
@@ -299,10 +323,9 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 4: replace every 'import Module' with 'import NewModule'
     if !config.copy {
-        rayon_directory_contents(config, old_module, new_module, module_ext);
+        rayon_directory_contents(config, old_module, new_module, module_ext, false);
     }
 
-    // TODO copy a file only?
     // step 5: move the actual file
     let mut new_module_path = src_dir;
     new_module_path.push_str(&module_to_file_name(new_module, module_ext));
@@ -322,7 +345,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         let mut file_name: PathBuf = (&config).dir.to_owned();
         file_name.push("src/");
         file_name.push(module_to_file_name(new_module, module_ext));
-        replace_file(&file_name, old_module, new_module, module_ext);
+        replace_file(&file_name, old_module, new_module, module_ext, false);
 
     }
 
@@ -340,11 +363,11 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
 }
 
-fn git_commit(src_dir: &str) -> () {
+fn git_stash(src_dir: &str) -> () {
     let mut cmd = "cd ".to_string();
     cmd.push_str(src_dir);
     cmd.push_str("&&");
-    cmd.push_str("git commit -am 'automatic commit made by hask-replace'");
+    cmd.push_str("git stash -k");
     if let Ok(c) = Command::new("sh")
         .arg("-c")
         .arg(cmd)
@@ -444,9 +467,9 @@ fn main() {
 
         let dir = PathBuf::from(dir_string);
 
-        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
+        let old_module = command.value_of("old").unwrap();
 
-        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
+        let new_module = command.value_of("new").unwrap();
 
         let extension = if command.is_present("hpack") {
             ".yaml"
@@ -457,7 +480,7 @@ fn main() {
         let config_project = get_config(&dir, ".hs", extension, command.is_present("copy"));
 
         if command.is_present("stash") {
-            git_commit(&config_project.dir.to_string_lossy().to_string());
+            git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
         let function = command.value_of("function").unwrap();
@@ -470,14 +493,14 @@ fn main() {
 
         let dir = PathBuf::from(dir_string);
 
-        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
+        let old_module = command.value_of("old").unwrap();
 
-        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
+        let new_module = command.value_of("new").unwrap();
 
         let config_project = get_config(&dir, ".hs", ".cabal", command.is_present("copy"));
 
         if command.is_present("stash") {
-            git_commit(&config_project.dir.to_string_lossy().to_string());
+            git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
         replace_all(&config_project, old_module, new_module);
@@ -496,14 +519,14 @@ fn main() {
 
         let dir = PathBuf::from(dir_string);
 
-        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
+        let old_module = command.value_of("old").unwrap();
 
-        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
+        let new_module = command.value_of("new").unwrap();
 
         let config_project = get_config(&dir, ".idr", ".ipkg", command.is_present("copy"));
 
         if command.is_present("stash") {
-            git_commit(&config_project.dir.to_string_lossy().to_string());
+            git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
         replace_all(&config_project, old_module, new_module);
@@ -514,14 +537,14 @@ fn main() {
 
         let dir = PathBuf::from(dir_string);
 
-        let old_module = command.value_of("old").unwrap(); // okay because a subcommand is required
+        let old_module = command.value_of("old").unwrap();
 
-        let new_module = command.value_of("new").unwrap(); // okay beacause a subcommand is required
+        let new_module = command.value_of("new").unwrap();
 
         let config_project = get_config(&dir, ".elm", ".json", command.is_present("copy"));
 
         if command.is_present("stash") {
-            git_commit(&config_project.dir.to_string_lossy().to_string());
+            git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
         replace_all(&config_project, old_module, new_module);
