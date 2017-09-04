@@ -9,16 +9,13 @@
   - [ ] allow user to input module name or file name
   - [ ] git stash instead of git commit? make it automatic, ideally.
 # Features
-  - [ ] move functions between modules
+  - [ ] support for backpack (?)
   - [x] move Idris module
   - [x] move Elm module
   - [x] copy a module
     - [x] shouldn't do replacements everywhere.
     - [x] .cabal file needs to be handled better.
   - [ ] move a directory structure
-  - [ ] add a module
-    - [ ] mustache templates (?)
-    - [ ] would need some kind of parser
   ~~- [ ] add a function to the export list if it is present~~
   ~~- [ ] rename a function across modules~~
 # Bugs
