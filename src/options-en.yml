@@ -4,7 +4,7 @@ about: Rename modules and functions across Haskell projects
 subcommands:
     - module:
         visible_alias: "m"
-        about: Replace a module across a project
+        about: Replace a module across a Haskell project that uses cabal
         args:
             - project:
                 value_name: PROJECT
@@ -38,7 +38,7 @@ subcommands:
                 help: Move test modules as well as the module itself.
     - idris:
         visible_alias: "i"
-        about: Replace a module across a project
+        about: Replace a module across an Idris project
         args:
             - project:
                 value_name: PROJECT
@@ -65,7 +65,7 @@ subcommands:
                 help: Copy a module rather than moving it.
     - elm:
         visible_alias: "e"
-        about: Replace a module across a project
+        about: Replace a module across an Elm project
         args:
             - project:
                 value_name: PROJECT
