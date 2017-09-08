@@ -254,7 +254,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         (name, dir.to_string())
     } else {
         eprintln!("module '{}' does not exist in this project", old_module);
-        exit(0x0001);
+        exit(0x0001)
     };
 
     let config_string = config.get_config_path(module_ext, config_ext);
@@ -381,79 +381,6 @@ fn git_stash(src_dir: &str) -> () {
     }
 }
 
-fn module_exists(config: &ProjectOwned, module: &str, extension: &str) -> (PathBuf, String) {
-
-    // step 1: determine that the module to find the function in actually exists
-    let mut module_vec =
-        find_by_end_vec(&config.dir, &module_to_file_name(module, extension), None);
-    let module_exists = !(module_vec.is_empty());
-
-    let (module_name, src_dir) = if module_exists {
-        let name = module_vec.pop().unwrap();
-        let name_string: String = name.to_string_lossy().to_string();
-        let name_str: &str = name_string.as_str();
-        let old_string: String = module_to_file_name(module, extension);
-        let old_str: &str = old_string.as_str();
-        let dir: &str = name_str.trim_right_matches(old_str);
-        (name, dir.to_string())
-    } else {
-        eprintln!("module '{}' does not exist in this project", module);
-        exit(0x0001);
-    };
-
-    (module_name, src_dir)
-}
-
-
-fn move_function(config: &ProjectOwned, function: &str, old_module: &str, new_module: &str) {
-
-    // step 1: confirm the modules exist
-    let (old_module_path, _) = module_exists(config, old_module, &config.config_extension);
-    let (new_module_path, _) = module_exists(config, new_module, &config.config_extension);
-
-    // step 2: move the actual function
-
-    // create the regex for the (top-level) function
-    let mut regex_str: String = "\n".to_string();
-    regex_str.push_str(function);
-    regex_str.push_str("( *:.*\n)?");
-    regex_str.push_str(function);
-    regex_str.push_str("(.*\n)?");
-    let re = Regex::new(&regex_str).unwrap();
-
-    // use nom for find and replace??
-
-    // write the stuff
-    let old = read_file(&old_module_path);
-    let captures = re.find(&old).unwrap(); // FIXME bad!!
-    let (i, j) = (captures.start(), captures.end());
-    let func_str = &old[i..j];
-    let mut new = read_file(&new_module_path);
-    new.push_str(func_str);
-    write_file(new_module_path, &new);
-    let mut old_write = (&old[..i]).to_string(); // TODO check this slice on byte indices
-    old_write.push_str(&old[j..]);
-    write_file(old_module_path, &old_write);
-
-    // step 3: remove the function from the list of explicit exports of the first module if
-    // necessary, and add it to the list of explicit exports of the second if necessary
-
-    // step 4: anywhere that the old module was imported, add the new module, if the function
-    // is called in that module. If it was imported explicitly, import it explicitly unless the new
-    // module is already there. If the old module's explicit imports are empty now, warn the user
-    // in case they still need the instances from the old module.
-    eprintln!(
-        "{}: hr does not yet replace explicit and qualified imports across projects!",
-        "Warning".yellow()
-    );
-
-    // step 5: if the old module was imported under a qualified name, and the function was called
-    // using this qualified name, import the new module qualified (if it's not already imported)
-    // using the first letter of the last bit to name it, and then replace the qualified uses of
-    // the old function
-
-}
-
 fn main() {
     let yaml = load_yaml!("options-en.yml");
     let matches = App::from_yaml(yaml)
@@ -461,33 +388,7 @@ fn main() {
         .setting(AppSettings::SubcommandRequired)
         .get_matches();
 
-    if let Some(command) = matches.subcommand_matches("function") {
-
-        let dir_string = get_dir(command.value_of("project"));
-
-        let dir = PathBuf::from(dir_string);
-
-        let old_module = command.value_of("old").unwrap();
-
-        let new_module = command.value_of("new").unwrap();
-
-        let extension = if command.is_present("hpack") {
-            ".yaml"
-        } else {
-            ".cabal"
-        };
-
-        let config_project = get_config(&dir, ".hs", extension, command.is_present("copy"));
-
-        if command.is_present("stash") {
-            git_stash(&config_project.dir.to_string_lossy().to_string());
-        }
-
-        let function = command.value_of("function").unwrap();
-
-        move_function(&config_project, function, old_module, new_module);
-
-    } else if let Some(command) = matches.subcommand_matches("module") {
+    if let Some(command) = matches.subcommand_matches("module") {
 
         let dir_string = get_dir(command.value_of("project"));
 
