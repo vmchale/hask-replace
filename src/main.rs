@@ -147,9 +147,11 @@ fn replace_file(
     source_file.read_to_string(&mut source).expect("141");
     let mut old_module_regex = old_module.to_string();
     if !whole_directory {
-        old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+        old_module_regex.push_str("(\n|\\.[a-z]|( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?");
     } else {
-        old_module_regex.push_str("(\n|\\.[a-zA-Z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+        old_module_regex.push_str(
+            "(\n|\\.[a-zA-Z]|( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?",
+        );
     }
     let re = Regex::new(&old_module_regex).unwrap();
     let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
@@ -172,9 +174,11 @@ fn rayon_directory_contents(
     let iter = dir.into_par_iter();
     let mut old_module_regex = old_module.to_string();
     if !whole_directory {
-        old_module_regex.push_str("(\n|\\.[a-z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+        old_module_regex.push_str("(\n|\\.[a-z]|( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?");
     } else {
-        old_module_regex.push_str("(\n|\\.[a-zA-Z]|( +)exposing.*\n|( +)\\(|( +)where)+?");
+        old_module_regex.push_str(
+            "(\n|\\.[a-zA-Z]||( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?",
+        );
     }
     let re = Regex::new(&old_module_regex).unwrap();
 

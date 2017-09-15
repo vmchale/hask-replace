@@ -1,6 +1,6 @@
 name: hask-replace
 author: Vanessa McHale <vanessa.mchale@reconfigure.io>
-about: Rename modules and functions across Haskell projects
+about: Rename modules across Haskell, Idris, and Elm projects
 subcommands:
     - module:
         visible_alias: "m"
