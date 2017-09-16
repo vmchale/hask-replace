@@ -5,6 +5,7 @@ packages:
     rm -rf lens-4.15.4
     git clone https://github.com/HuwCampbell/idris-lens.git
     cd idris-lens && hr idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
+    rm -rf idris-lens
     cabal unpack dhall
     cd dhall-1.6.0 && hr module . "Dhall.Import" "Dhall.Dependencies" && cabal new-build
     rm -rf dhall-1.6.0
