@@ -1,8 +1,7 @@
 packages: 
     rm -rf lens-* idris-lens dhall-*
     cabal unpack lens
-    cd lens-4.15.4
-    hr module . "Control.Lens.Internal" "Control.Lens.Mine" && cabal new-build
+    cd lens-4.15.4 && hr module . "Control.Lens.Internal" "Control.Lens.Mine" && cabal new-build
     rm -rf lens-4.15.4
     git clone https://github.com/HuwCampbell/idris-lens.git
     cd idris-lens && hr idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
