@@ -16,6 +16,7 @@ path = "src/main.rs"
 colored = "1.5.2"
 rayon = "0.8.2"
 walkdir = "1.0.7"
+# TODO use parser-haskell for this since it should be better!!
 
 [dependencies.regex]
 features = ["simd-accel"]

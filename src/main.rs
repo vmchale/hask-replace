@@ -25,12 +25,12 @@ struct ProjectOwned {
     pub copy: bool,
     pub dir: PathBuf,
     pub config_file: PathBuf,
-    pub module_extension: String,
+    pub module_extension: Vec<String>,
     pub config_extension: String,
 }
 
 impl ProjectOwned {
-    fn get_config_path(&self, module_ext: &str, config_ext: &str) -> String {
+    fn get_config_path(&self, module_ext: &Vec<String>, config_ext: &str) -> String {
         get_config(&self.dir, module_ext, config_ext, self.copy)
             .config_file
             .to_string_lossy()
@@ -59,7 +59,7 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
 }
 
 
-fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str, copy: bool) -> ProjectOwned {
+fn get_config(p: &PathBuf, module_ext: &Vec<String>, config_ext: &str, copy: bool) -> ProjectOwned {
 
     let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
@@ -80,7 +80,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str, copy: bool) -> Pr
             copy: copy,
             dir: parent.to_path_buf(),
             config_file: p.clone(),
-            module_extension: module_ext.to_string(),
+            module_extension: module_ext.to_owned(),
             config_extension: config_ext.to_string(),
         }
     } else {
@@ -95,7 +95,7 @@ fn get_config(p: &PathBuf, module_ext: &str, config_ext: &str, copy: bool) -> Pr
             config_file: {
                 config_name
             },
-            module_extension: module_ext.to_string(),
+            module_extension: module_ext.to_owned(),
             config_extension: config_ext.to_string(),
         }
     }
@@ -110,7 +110,7 @@ fn get_dir(paths_from_cli: Option<&str>) -> &str {
     }
 }
 
-fn get_source_files(p: &PathBuf, extension: &str) -> Vec<PathBuf> {
+fn get_source_files(p: &PathBuf, extension: &Vec<String>) -> Vec<PathBuf> {
 
     let s = p.to_string_lossy().to_string();
 
@@ -120,7 +120,10 @@ fn get_source_files(p: &PathBuf, extension: &str) -> Vec<PathBuf> {
         let path = p.path();
         !path.starts_with(".stack-work") &&
             p.file_name().to_string_lossy().to_string().ends_with(
-                extension,
+                extension
+                    .into_iter()
+                    .next()
+                    .unwrap(),
             )
     });
 
@@ -128,9 +131,9 @@ fn get_source_files(p: &PathBuf, extension: &str) -> Vec<PathBuf> {
 
 }
 
-fn module_to_file_name(module: &str, extension: &str) -> String {
+fn module_to_file_name(module: &str, extension: &Vec<String>) -> String {
     let mut replacements = module.replace(".", "/");
-    replacements.push_str(extension);
+    replacements.push_str(extension.into_iter().next().unwrap());
     replacements
 }
 
@@ -138,7 +141,7 @@ fn replace_file(
     p: &PathBuf,
     old_module: &str,
     new_module: &str,
-    extension: &str,
+    extension: &Vec<String>,
     whole_directory: bool,
 ) -> () {
 
@@ -154,7 +157,11 @@ fn replace_file(
         );
     }
     let re = Regex::new(&old_module_regex).unwrap();
-    let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
+    let num = if extension.into_iter().next().unwrap() == ".idr" {
+        1
+    } else {
+        0
+    }; // FIXME
     let replacements = re.replacen(&source, num, |caps: &Captures| {
         format!("{}{}", new_module, &caps[1])
     }).to_string();
@@ -166,7 +173,7 @@ fn rayon_directory_contents(
     config: &ProjectOwned,
     old_module: &str,
     new_module: &str,
-    extension: &str,
+    extension: &Vec<String>,
     whole_directory: bool,
 ) -> () {
 
@@ -186,7 +193,11 @@ fn rayon_directory_contents(
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let num = if extension == ".idr" { 1 } else { 0 }; // FIXME
+        let num = if extension.into_iter().next().unwrap() == ".idr" {
+            1
+        } else {
+            0
+        }; // FIXME
         let replacements = re.replacen(&source, num, |caps: &Captures| {
             format!("{}{}", new_module, &caps[1])
         }).to_string();
@@ -237,13 +248,13 @@ fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
 
 fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
-    let module_ext: &str = &config.module_extension;
+    let module_ext: &Vec<String> = &config.module_extension;
     let config_ext: &str = &config.config_extension;
 
     // step 1: determine that the module we want to replace in fact exists
     let mut old_module_vec = find_by_end_vec(
         &config.dir,
-        &module_to_file_name(old_module, module_ext),
+        &module_to_file_name(old_module, &module_ext),
         None,
     );
     let old_module_exists = !(old_module_vec.is_empty());
@@ -327,12 +338,12 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 4: replace every 'import Module' with 'import NewModule'
     if !config.copy {
-        rayon_directory_contents(config, old_module, new_module, module_ext, false);
+        rayon_directory_contents(config, old_module, new_module, &module_ext, false);
     }
 
     // step 5: move the actual file
     let mut new_module_path = src_dir;
-    new_module_path.push_str(&module_to_file_name(new_module, module_ext));
+    new_module_path.push_str(&module_to_file_name(new_module, &module_ext));
     if Path::new(&new_module_path).exists() {
         eprintln!("{}: destination module already exists.", "Error".red());
         exit(0x0001);
@@ -348,8 +359,8 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
         let mut file_name: PathBuf = (&config).dir.to_owned();
         file_name.push("src/");
-        file_name.push(module_to_file_name(new_module, module_ext));
-        replace_file(&file_name, old_module, new_module, module_ext, false);
+        file_name.push(module_to_file_name(new_module, &module_ext));
+        replace_file(&file_name, old_module, new_module, &module_ext, false);
 
     }
 
@@ -402,7 +413,13 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap();
 
-        let config_project = get_config(&dir, ".hs", ".cabal", command.is_present("copy"));
+        let extns = vec![
+            ".hs".to_string(),
+            ".hs-boot".to_string(),
+            ".hsig".to_string(),
+        ];
+
+        let config_project = get_config(&dir, &extns, ".cabal", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());
@@ -418,6 +435,15 @@ fn main() {
             replace_all(&config_project, &old_module_owned, &new_module_owned);
         }
 
+    } else if let Some(command) = matches.subcommand_matches("rename") {
+
+        let dir_string = command.value_of("project");
+
+        let new_project = command.value_of("new");
+
+        // rename cabal file and change
+        println!("{:?}, {:?}", dir_string, new_project);
+
     } else if let Some(command) = matches.subcommand_matches("idris") {
 
         let dir_string = get_dir(command.value_of("project"));
@@ -428,7 +454,9 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap();
 
-        let config_project = get_config(&dir, ".idr", ".ipkg", command.is_present("copy"));
+        let extns = vec![".idr".to_string()];
+
+        let config_project = get_config(&dir, &extns, ".ipkg", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());
@@ -446,7 +474,9 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap();
 
-        let config_project = get_config(&dir, ".elm", ".json", command.is_present("copy"));
+        let extns = vec![".elm".to_string()];
+
+        let config_project = get_config(&dir, &extns, ".json", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());
