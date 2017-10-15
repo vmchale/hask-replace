@@ -30,3 +30,6 @@ test:
 
 patch:
     cargo release -l patch --no-dev-version
+
+minor:
+    cargo release -l minor --no-dev-version
