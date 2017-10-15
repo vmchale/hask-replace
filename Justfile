@@ -1,9 +1,5 @@
 packages: 
-    rm -rf lens-* idris-lens dhall-* haskell-backpack
-    git clone https://github.com/haskell-backpack/backpack-str
-    cd backpack-str && hr module . Str NewStr
-    cd backpack-str && cabal new-build str-sig
-    rm -rf backpack-str
+    rm -rf lens-* idris-lens dhall-*
     cabal unpack lens
     cd lens-4.15.4 && hr module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
     rm -rf lens-4.15.4
@@ -22,7 +18,7 @@ test:
     pi new idris nothing
     cargo run -- idris nothing "Nothing.Lib" "NewLib.Nested"
     cd nothing && idris --build nothing.ipkg
-    rm -rf test-nothing
+    rm test-nothing
     pi new haskell test-nothing
     cargo run -- module test-nothing "Lib" "NewLib.Nested" --copy
     cd test-nothing && stack test

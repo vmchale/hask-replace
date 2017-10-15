@@ -5,7 +5,7 @@ about: Rename modules across Haskell, Idris, and Elm projects
 subcommands:
   - rename:
       visible_alias: "r"
-      about: Replace a cabal package.
+      about: Rename a cabal package.
       args:
         - project:
             value_name: PROJECT
@@ -23,9 +23,13 @@ subcommands:
             required: true
             help: New package name
         - stack:
-            short: s
+            short: t
             long: stack
             help: "Flag to be used when a project uses a 'stack.yaml' file rather than a 'cabal.project' file."
+        - stash:
+            short: s
+            long: stash
+            help: Commit using git before making any changes
   - module:
       visible_alias: "m"
       about: Replace a module across a Haskell project that uses cabal

@@ -299,6 +299,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     let old_module_exists = !(old_module_vec.is_empty());
 
     let (old_module_name, src_dir, extn) = if old_module_exists {
+        // TODO these should return multiple possible values.
         let name = old_module_vec.pop().unwrap();
         let name_string: String = name.to_string_lossy().to_string();
         let name_str: &mut str = &mut name_string.as_str().to_owned();
@@ -351,14 +352,14 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     let source = read_file(&config_string);
     let mut old_module_regex = "".to_string();
     old_module_regex.push_str(old_module);
-    old_module_regex.push_str("(\n|,|\\))+?");
+    old_module_regex.push_str("(\\)|\n|,)+?");
     let re = Regex::new(&old_module_regex).unwrap();
     let replacements = if !config.copy {
-        re.replacen(&source, 2, |caps: &Captures| {
-            format!("{} {}", new_module, &caps[1])
+        re.replacen(&source, 0, |caps: &Captures| {
+            format!("{}{}", new_module, &caps[1])
         }).to_string()
     } else {
-        re.replacen(&source, 2, |caps: &Captures| {
+        re.replacen(&source, 0, |caps: &Captures| {
             let filtered_caps: String = (&caps[1])
                 .to_string()
                 .chars()
@@ -465,8 +466,8 @@ fn main() {
 
         let extns = vec![
             ".hs".to_string(),
-            ".hs-boot".to_string(),
-            ".hsig".to_string(),
+            // ".hs-boot".to_string(),
+            // ".hsig".to_string(),
         ];
 
         let config_project = get_config(&dir, &extns, ".cabal", command.is_present("copy"));
@@ -497,7 +498,11 @@ fn main() {
 
         let extns = vec![".cabal".to_string(), ".yaml".to_string()];
 
-        let config_project = get_config(&dir, &extns, ".project", command.is_present("copy"));
+        let config_project = if command.is_present("stack") {
+            get_config(&dir, &extns, ".yaml", false)
+        } else {
+            get_config(&dir, &extns, ".cabal", false)
+        };
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());
