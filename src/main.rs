@@ -39,7 +39,7 @@ impl ProjectOwned {
 }
 
 
-fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf> {
+fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<PathBuf> {
 
     let s = p.to_string_lossy().to_string();
 
@@ -50,7 +50,16 @@ fn find_by_end_vec(p: &PathBuf, find: &str, depth: Option<usize>) -> Vec<PathBuf
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.starts_with(".stack-work")) && (path.to_string_lossy().to_string().ends_with(find))
+        (!path.starts_with(".stack-work")) &&
+            {
+                let p_str = path.to_string_lossy().to_string();
+                (find.into_iter().fold(
+                    false,
+                    |bool_accumulator, string_ext| {
+                        bool_accumulator || p_str.ends_with(string_ext)
+                    },
+                ))
+            }
     });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
@@ -64,7 +73,9 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
     let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
 
-    let vec = find_by_end_vec(p, config_ext, Some(1));
+    let mut config_vec: Vec<String> = Vec::new();
+    config_vec.push(config_ext.to_string());
+    let vec = find_by_end_vec(p, config_vec.as_slice(), Some(1));
     let vec_len = vec.len();
 
     // if we find more than one config file, abort.
@@ -119,22 +130,36 @@ fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
         !path.starts_with(".stack-work") &&
-            p.file_name().to_string_lossy().to_string().ends_with(
-                extension
-                    .into_iter()
-                    .next()
-                    .unwrap(),
-            )
+            {
+                let p_str = p.file_name().to_string_lossy().to_string();
+                extension.into_iter().fold(
+                    false,
+                    |bool_accumulator, string_ext| {
+                        bool_accumulator || p_str.ends_with(string_ext)
+                    },
+                )
+            }
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
 
 }
 
-fn module_to_file_name(module: &str, extension: &[String]) -> String {
-    let mut replacements = module.replace(".", "/");
-    replacements.push_str(extension.into_iter().next().unwrap());
-    replacements
+fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
+    let replacements = module.replace(".", "/");
+    let mut replacements_vec: Vec<String> = Vec::with_capacity(extension.into_iter().count());
+    for _ in extension {
+        replacements_vec.push(replacements.clone());
+    }
+    let mut extension_iter = extension.into_iter();
+    let new_vec: Vec<String> = replacements_vec
+        .into_iter()
+        .map(|mut x| {
+            x.push_str(extension_iter.next().unwrap());
+            x
+        })
+        .collect::<Vec<String>>();
+    new_vec
 }
 
 fn replace_file(
@@ -246,6 +271,20 @@ fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
     contents
 }
 
+fn trim_matches_only<'a>(name_str: &'a mut str, old_str: &'a [String]) -> (&'a str, String) {
+    let mut default = "".to_string();
+    let mut default_name = "";
+    for p in old_str {
+        if name_str.ends_with(p) {
+            default = p.to_string();
+            default_name = name_str.trim_right_matches(p);
+        }
+    }
+    let extn = default.chars().skip_while(|c| c != &'.').collect();
+    (default_name, extn)
+}
+
+
 fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () {
 
     let module_ext: &Vec<String> = &config.module_extension;
@@ -254,19 +293,19 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     // step 1: determine that the module we want to replace in fact exists
     let mut old_module_vec = find_by_end_vec(
         &config.dir,
-        &module_to_file_name(old_module, module_ext),
+        &module_to_file_names(old_module, module_ext),
         None,
     );
     let old_module_exists = !(old_module_vec.is_empty());
 
-    let (old_module_name, src_dir) = if old_module_exists {
+    let (old_module_name, src_dir, extn) = if old_module_exists {
         let name = old_module_vec.pop().unwrap();
         let name_string: String = name.to_string_lossy().to_string();
-        let name_str: &str = name_string.as_str();
-        let old_string: String = module_to_file_name(old_module, module_ext);
-        let old_str: &str = old_string.as_str();
-        let dir: &str = name_str.trim_right_matches(old_str);
-        (name, dir.to_string())
+        let name_str: &mut str = &mut name_string.as_str().to_owned();
+        let old_string: Vec<String> = module_to_file_names(old_module, module_ext);
+        let old_str: &[String] = &old_string; // old_string.as_str();
+        let (dir, extn) = trim_matches_only(name_str, old_str);
+        (name, dir.to_string(), extn)
     } else {
         eprintln!("module '{}' does not exist in this project", old_module);
         exit(0x0001)
@@ -310,12 +349,13 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 3: replace the module in the '.cabal' file
     let source = read_file(&config_string);
-    let mut old_module_regex = old_module.to_string();
-    old_module_regex.push_str("(\n|,)+?");
+    let mut old_module_regex = "".to_string();
+    old_module_regex.push_str(old_module);
+    old_module_regex.push_str("(\n|,|\\))+?");
     let re = Regex::new(&old_module_regex).unwrap();
     let replacements = if !config.copy {
         re.replacen(&source, 2, |caps: &Captures| {
-            format!("{}{}", new_module, &caps[1])
+            format!("{} {}", new_module, &caps[1])
         }).to_string()
     } else {
         re.replacen(&source, 2, |caps: &Captures| {
@@ -343,7 +383,11 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 5: move the actual file
     let mut new_module_path = src_dir;
-    new_module_path.push_str(&module_to_file_name(new_module, module_ext));
+    new_module_path.push_str(&module_to_file_names(new_module, module_ext)
+        .into_iter()
+        .filter(|p| p.ends_with(&extn))
+        .next()
+        .unwrap());
     if Path::new(&new_module_path).exists() {
         eprintln!("{}: destination module already exists.", "Error".red());
         exit(0x0001);
@@ -358,8 +402,14 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     if config.copy {
 
         let mut file_name: PathBuf = (&config).dir.to_owned();
+        // FIXME don't hard-code this.
         file_name.push("src/");
-        file_name.push(module_to_file_name(new_module, module_ext));
+        file_name.push(
+            module_to_file_names(new_module, module_ext)
+                .into_iter()
+                .next()
+                .unwrap(),
+        );
         replace_file(&file_name, old_module, new_module, module_ext, false);
 
     }

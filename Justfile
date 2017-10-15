@@ -1,8 +1,8 @@
 packages: 
     rm -rf lens-* idris-lens dhall-* haskell-backpack
     git clone https://github.com/haskell-backpack/backpack-str
-    cd backpack-str && hr rename . str-sig str-fancy
-    cd backpack-str && cabal new-build
+    cd backpack-str && hr module . Str NewStr
+    cd backpack-str && cabal new-build str-sig
     rm -rf backpack-str
     cabal unpack lens
     cd lens-4.15.4 && hr module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
@@ -18,15 +18,15 @@ packages:
     rm -rf elm-mdl/
 
 test:
+    rm -rf nothing
+    pi new idris nothing
+    cargo run -- idris nothing "Nothing.Lib" "NewLib.Nested"
+    cd nothing && idris --build nothing.ipkg
     rm -rf test-nothing
     pi new haskell test-nothing
     cargo run -- module test-nothing "Lib" "NewLib.Nested" --copy
     cd test-nothing && stack test
     rm -rf test-nothing nothing
-    pi new idris nothing
-    cargo run -- idris nothing "Lib" "NewLib.Nested"
-    cd nothing && idris --build nothing.ipkg
-    rm -rf nothing
     pi new elm nothing
     cargo run -- elm nothing "Update" "Update.Nested.Mod"
     cd nothing && elm-make src/main.elm --yes
