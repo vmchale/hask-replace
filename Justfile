@@ -1,6 +1,9 @@
 packages: 
     rm -rf lens-* idris-lens dhall-* haskell-backpack
     git clone https://github.com/haskell-backpack/backpack-str
+    cd backpack-str && hr rename . str-sig str-fancy
+    cd backpack-str && cabal new-build
+    rm -rf backpack-str
     cabal unpack lens
     cd lens-4.15.4 && hr module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
     rm -rf lens-4.15.4
