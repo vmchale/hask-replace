@@ -18,7 +18,7 @@ test:
     pi new idris nothing
     cargo run -- idris nothing "Nothing.Lib" "NewLib.Nested"
     cd nothing && idris --build nothing.ipkg
-    rm test-nothing
+    rm -rf test-nothing
     pi new haskell test-nothing
     cargo run -- module test-nothing "Lib" "NewLib.Nested" --copy
     cd test-nothing && stack test
