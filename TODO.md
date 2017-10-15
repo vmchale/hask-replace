@@ -2,6 +2,9 @@
   ~~- [ ] evaluate the parallelism~~
 # Ergonomics
   - [ ] prompt before replacement
+  - [ ] optionally proceed if no config file is found.
+  - [ ] if we replace a `parser.cabal` file, and it's in a directory called
+    `parser`, we should rename the directory too.
   - [x] vim plugin/wrapper
     - [ ] nice diff output like vim-hare
     - [ ] should optionally move spec files as well
@@ -11,6 +14,8 @@
 # Features
   - [ ] support for backpack (?)
     - [x] support for `.hs-boot` files
+    - [ ] support for alex/happy (incl. the extra-src-files field of a .cabal
+      file!)
   - [x] move Idris module
   - [x] move Elm module
   - [x] copy a module

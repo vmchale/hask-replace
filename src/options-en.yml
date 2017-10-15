@@ -1,92 +1,116 @@
+---
 name: hask-replace
 author: Vanessa McHale <vanessa.mchale@reconfigure.io>
 about: Rename modules across Haskell, Idris, and Elm projects
 subcommands:
-    - module:
-        visible_alias: "m"
-        about: Replace a module across a Haskell project that uses cabal
-        args:
-            - project:
-                value_name: PROJECT
-                index: 1
-                required: true
-                help: "Directory or '.cabal' file for the project"
-            - stash:
-                short: s
-                long: stash
-                help: Commit using git before making any changes
-            - old:
-                value_name: OLD_MODULE
-                index: 2
-                required: true
-                help: Name of old module
-            - new:
-                value_name: NEW_MODULE
-                index: 3
-                required: true
-                help: Name of the new module
-            - hpack:
-                short: y
-                long: hpack
-                help: "Flag to be used when the project uses an 'hpack.yaml' file rather than a '.cabal' file."
-            - copy:
-                short: c
-                long: copy
-                help: Copy a module rather than moving it.
-            - spec:
-                long: with-spec
-                help: Move test modules as well as the module itself.
-    - idris:
-        visible_alias: "i"
-        about: Replace a module across an Idris project
-        args:
-            - project:
-                value_name: PROJECT
-                index: 1
-                required: true
-                help: "Directory or '.ipkg' file for the project"
-            - stash:
-                short: s
-                long: stash
-                help: Commit using git before making any changes
-            - old:
-                value_name: OLD_MODULE
-                index: 2
-                required: true
-                help: Name of old module
-            - new:
-                value_name: NEW_MODULE
-                index: 3
-                required: true
-                help: Name of the new module
-            - copy:
-                short: c
-                long: copy
-                help: Copy a module rather than moving it.
-    - elm:
-        visible_alias: "e"
-        about: Replace a module across an Elm project
-        args:
-            - project:
-                value_name: PROJECT
-                index: 1
-                required: true
-                help: "Directory or 'elm-package.json' file for the project"
-            - stash:
-                short: s
-                long: stash
-                help: Commit using git before making any changes
-            - old:
-                value_name: OLD_MODULE
-                index: 2
-                required: true
-                help: Name of old module
-            - new:
-                value_name: NEW_MODULE
-                index: 3
-                required: true
-                help: Name of the new module
-            - copy:
-                short: c
-                long: copy
-                help: Copy a module rather than moving it.
+  - rename:
+      visible_alias: "r"
+      about: Replace a cabal package.
+      args:
+        - project:
+            value_name: PROJECT
+            index: 1
+            required: true
+            help: "Directory or cabal.project file for the project."
+        - old:
+            value_name: OLD_PACKAGE
+            index: 2
+            required: true
+            help: Old package name
+        - new:
+            value_name: NEW_PACKAGE
+            index: 3
+            required: true
+            help: New package name
+        - stack:
+            short: s
+            long: stack
+            help: "Flag to be used when a project uses a 'stack.yaml' file rather than a 'cabal.project' file."
+  - module:
+      visible_alias: "m"
+      about: Replace a module across a Haskell project that uses cabal
+      args:
+        - project:
+            value_name: PROJECT
+            index: 1
+            required: true
+            help: "Directory or '.cabal' file for the project"
+        - stash:
+            short: s
+            long: stash
+            help: Commit using git before making any changes
+        - old:
+            value_name: OLD_MODULE
+            index: 2
+            required: true
+            help: Name of old module
+        - new:
+            value_name: NEW_MODULE
+            index: 3
+            required: true
+            help: Name of the new module
+        - hpack:
+            short: y
+            long: hpack
+            help: "Flag to be used when the project uses an 'hpack.yaml' file rather than a '.cabal' file."
+        - copy:
+            short: c
+            long: copy
+            help: Copy a module rather than moving it.
+        - spec:
+            long: with-spec
+            help: "Move test modules as well as the module itself. The spec for 'Module' is assumed to be located in 'ModuleSpec'"
+  - idris:
+      visible_alias: "i"
+      about: Replace a module across an Idris project
+      args:
+        - project:
+            value_name: PROJECT
+            index: 1
+            required: true
+            help: "Directory or '.ipkg' file for the project"
+        - stash:
+            short: s
+            long: stash
+            help: Commit using git before making any changes
+        - old:
+            value_name: OLD_MODULE
+            index: 2
+            required: true
+            help: Name of old module
+        - new:
+            value_name: NEW_MODULE
+            index: 3
+            required: true
+            help: Name of the new module
+        - copy:
+            short: c
+            long: copy
+            help: Copy a module rather than moving it.
+  - elm:
+      visible_alias: "e"
+      about: Replace a module across an Elm project
+      args:
+        - project:
+            value_name: PROJECT
+            index: 1
+            required: true
+            help: "Directory or 'elm-package.json' file for the project"
+        - stash:
+            short: s
+            long: stash
+            help: Commit using git before making any changes
+        - old:
+            value_name: OLD_MODULE
+            index: 2
+            required: true
+            help: Name of old module
+        - new:
+            value_name: NEW_MODULE
+            index: 3
+            required: true
+            help: Name of the new module
+        - copy:
+            short: c
+            long: copy
+            help: Copy a module rather than moving it.
