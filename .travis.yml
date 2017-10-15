@@ -1,6 +1,4 @@
-# Based on the "trust" template v0.1.1
-# https://github.com/japaric/trust/tree/v0.1.1
-
+---
 dist: trusty
 language: rust
 services: docker
@@ -32,12 +30,27 @@ matrix:
     # Other architectures
     - env: TARGET=aarch64-unknown-linux-gnu
       rust: nightly
-      #- env: TARGET=armv7-unknown-linux-gnueabihf
-      #rust: nightly
-      #- env: TARGET=armv7-unknown-linux-musleabihf
-      #rust: nightly
-      #- env: TARGET=sparc64-unknown-linux-gnu
-      #rust: nightly
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+      rust: nightly
+    - env: TARGET=armv7-unknown-linux-musleabihf
+      rust: nightly
+    - env: TARGET=sparc64-unknown-linux-gnu
+      rust: nightly
+    - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+      rust: nightly
+    - env: TARGET=arm-unknown-linux-gnueabi
+      rust: nightly
+    - env: TARGET=arm-unknown-linux-musleabi
+      rust: nightly
+  allow_failures:
+    - env: TARGET=x86_64-pc-windows-gnu
+    - env: TARGET=x86_64-pc-windows-msvc DISABLE_TESTS=1
+    - env: TARGET=arm-unknown-linux-musleabi
+    - env: TARGET=arm-unknown-linux-gnueabi
+    - env: TARGET=sparc64-unknown-linux-gnu
+    - env: TARGET=armv7-unknown-linux-musleabihf
+    - env: TARGET=armv7-unknown-linux-gnueabihf
+    - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
 
 before_install: set -e
 
@@ -58,7 +71,7 @@ deploy:
   # - Encrypt it: `travis encrypt 0123456789012345678901234567890123456789
   # - Paste the output down here
   api_key:
-      secure: "TmSTOIiH0w1G9wrEEPbpYwLEnmQ7CJ7R2F+kVt5H9VIdUzu/NuYBgjoTX1LmgDcQWXbIzty3UhgdREszvOdh7UJXqZwsXf6Nfex5PwAsHU5I2RSMJCrsSUCIC+KRae3ByWTNMYUHwukF3VdafLIDuiJJImD3aJ+cmS3g/obrzzXWMo/HqrsmJsvnfYFDmyQIIHo26W7FpySRaJpH9rmIupYutIvHJ6B8L9td82humMBvbMYddnyMBwKtQ0FBOSGFbCzXcRLlPg6a82HJQedsInY8aXSGatUMrycY7WGRfNMHARo6xXiY3bMpJwLl3G/F+HTB56HTI46AqZu1I3UU1RnWC3bbTzCpF+JnniIoYKB5mugZbvkR6/aFiMJkb06mghqScQadxPn+UhoOzhKK40a9E7D4pk3OT0vTLgdWbOrXGSva8xo/3LQt0J5HmYVDtsDTi9Oa6PtTGFHxyiM7u0DCAE7GCfVoGOFjoLqDDyLNzzoAYwMrVgByrz1Ak+A3g303u5e+/I5s0P+VRAszhnSVOA5iMjK9An5jGHzvrHn8k34nLaDtlFPybhiG+9XLkZwlQQV2xQGefHXEQWMG7DUWwLi889hOLyjoYdGCZkdPMYy7BIJEQXShTWh/qiLMpjswCzcIaZAusVGeRrRQcN3Q62xUAdEn50UlVb5+hpU="
+    secure: "TmSTOIiH0w1G9wrEEPbpYwLEnmQ7CJ7R2F+kVt5H9VIdUzu/NuYBgjoTX1LmgDcQWXbIzty3UhgdREszvOdh7UJXqZwsXf6Nfex5PwAsHU5I2RSMJCrsSUCIC+KRae3ByWTNMYUHwukF3VdafLIDuiJJImD3aJ+cmS3g/obrzzXWMo/HqrsmJsvnfYFDmyQIIHo26W7FpySRaJpH9rmIupYutIvHJ6B8L9td82humMBvbMYddnyMBwKtQ0FBOSGFbCzXcRLlPg6a82HJQedsInY8aXSGatUMrycY7WGRfNMHARo6xXiY3bMpJwLl3G/F+HTB56HTI46AqZu1I3UU1RnWC3bbTzCpF+JnniIoYKB5mugZbvkR6/aFiMJkb06mghqScQadxPn+UhoOzhKK40a9E7D4pk3OT0vTLgdWbOrXGSva8xo/3LQt0J5HmYVDtsDTi9Oa6PtTGFHxyiM7u0DCAE7GCfVoGOFjoLqDDyLNzzoAYwMrVgByrz1Ak+A3g303u5e+/I5s0P+VRAszhnSVOA5iMjK9An5jGHzvrHn8k34nLaDtlFPybhiG+9XLkZwlQQV2xQGefHXEQWMG7DUWwLi889hOLyjoYdGCZkdPMYy7BIJEQXShTWh/qiLMpjswCzcIaZAusVGeRrRQcN3Q62xUAdEn50UlVb5+hpU="
   file_glob: true
   file: $CRATE_NAME-$TRAVIS_TAG-$TARGET.*
   on:
