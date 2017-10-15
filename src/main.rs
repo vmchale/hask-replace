@@ -464,6 +464,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap();
 
+        // TODO .hs-boot, .hsig files
         let extns = vec![".hs".to_string(), ".x".to_string(), ".y".to_string()];
 
         let config_project = get_config(&dir, &extns, ".cabal", command.is_present("copy"));
