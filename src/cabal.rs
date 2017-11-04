@@ -123,18 +123,17 @@ named!(step_indented<&str, Vec<&str>>,
     do_parse!(a: tag!(",") >> b: many0!(tag!(" ")) >> (join(vec![vec![a], b]))) |
     do_parse!(a: tag!(" ") >> b: many0!(tag!(" ")) >> (join(vec![vec![a], b]))) |
     do_parse!(a: opt!(tag!("\n")) >> b: eof!() >> (vec![from_opt(a), b])) |
-    do_parse!(a: tag!(",\n") >> b: many0!(tag!(" ")) >> (join(vec![vec![a], b])))
+    do_parse!(c: opt!(tag!(",")) >> a: tag!("\n") >> b: many0!(tag!(" ")) >> (join(vec![vec![from_opt(c), a], b])))
   )
 );
 
-// do_parse!(a: opt!(tag!(",")) >> b: many0!(tag!(" ")) >> c: tag!("\n") >> d: opt!(tag!(",")) >> (join(vec![vec![from_opt(a)], b, vec![c, from_opt(d)]])))
 named_args!(module_helper<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(z: opt!(skip_comment) >> a: step_indented >> b: is_not!("\n, ") >> c: alt!(tag!(",\n") | tag!("\n")) >> (join(vec![from_vec(z), a, vec![swap_module(old, new, b)], vec![c]])))
 );
 
 named_args!(parse_modules<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
-    first: do_parse!(z: opt!(skip_comment) >> a: step_indented >> b: is_not!("\n, ") >> c: alt!(tag!(",\n") | tag!("\n") | eof!()) >> (join(vec![from_vec(z), a, vec![swap_module(old, new, b)], vec![c]]))) >>
+    first: do_parse!(z: opt!(skip_comment) >> a: step_indented >> b: is_not!("\n, ") >> c: alt!(tag!(",\n") | tag!(",") | tag!("\n") | eof!()) >> (join(vec![from_vec(z), a, vec![swap_module(old, new, b)], vec![c]]))) >>
     v: many0!(call!(module_helper, old, new)) >>
     (join(join(vec![vec![first], v])))
   )

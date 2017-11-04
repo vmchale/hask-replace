@@ -14,7 +14,9 @@ library
   build-depends: base <= 4.11,
                  recursion-schemes
   -- exposed-modules: Mod
-  exposed-modules: Mod
+  exposed-modules:
+    EmptyMod,
+    Mod
   default-language: Haskell2010
 
 test-suite sum
