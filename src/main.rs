@@ -2,8 +2,8 @@
 extern crate clap;
 extern crate rayon;
 extern crate colored;
-extern crate regex;
 extern crate walkdir;
+extern crate hreplace;
 
 use std::fs;
 use rayon::prelude::*;
@@ -14,10 +14,11 @@ use std::process::exit;
 use colored::*;
 use std::fs::File;
 use std::io::prelude::*;
-use regex::{Regex, Captures};
 use std::process::Command;
 use std::path::Path;
 use std::fmt::Debug;
+use hreplace::cabal::parse_cabal;
+use hreplace::hask::parse_haskell;
 
 #[derive(Debug)]
 // TODO should encapsulate strings!
@@ -162,34 +163,14 @@ fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
     new_vec
 }
 
-fn replace_file(
-    p: &PathBuf,
-    old_module: &str,
-    new_module: &str,
-    extension: &[String],
-    whole_directory: bool,
-) -> () {
+fn replace_file(p: &PathBuf, old_module: &str, new_module: &str, _: &[String], _: bool) -> () {
 
-    let mut source_file = File::open(p).expect("139");
+    let mut source_file = File::open(p).expect("174");
     let mut source = String::new();
-    source_file.read_to_string(&mut source).expect("141");
-    let mut old_module_regex = old_module.to_string();
-    if !whole_directory {
-        old_module_regex.push_str("(\n|\\.[a-z]|( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?");
-    } else {
-        old_module_regex.push_str(
-            "(\n|\\.[a-zA-Z]|( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?",
-        );
-    }
-    let re = Regex::new(&old_module_regex).unwrap();
-    let num = if extension.into_iter().next().unwrap() == ".idr" {
-        1
-    } else {
-        0
-    }; // FIXME
-    let replacements = re.replacen(&source, num, |caps: &Captures| {
-        format!("{}{}", new_module, &caps[1])
-    }).to_string();
+    source_file.read_to_string(&mut source).expect("176");
+
+    let replacements = parse_haskell(&source, "", "", old_module, new_module);
+
     write_file(p, &replacements);
 
 }
@@ -199,33 +180,17 @@ fn rayon_directory_contents(
     old_module: &str,
     new_module: &str,
     extension: &[String],
-    whole_directory: bool,
+    _: bool,
 ) -> () {
 
     let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
     let iter = dir.into_par_iter();
-    let mut old_module_regex = old_module.to_string();
-    if !whole_directory {
-        old_module_regex.push_str("(\n|\\.[a-z]|( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?");
-    } else {
-        old_module_regex.push_str(
-            "(\n|\\.[a-zA-Z]||( +)as|( +)exposing.*\n|( +)\\(|( +)where)+?",
-        );
-    }
-    let re = Regex::new(&old_module_regex).unwrap();
 
     iter.for_each(|p| {
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let num = if extension.into_iter().next().unwrap() == ".idr" {
-            1
-        } else {
-            0
-        }; // FIXME
-        let replacements = re.replacen(&source, num, |caps: &Captures| {
-            format!("{}{}", new_module, &caps[1])
-        }).to_string();
+        let replacements = parse_haskell(&source, "", "", old_module, new_module);
         write_file(&p, &replacements);
     })
 
@@ -350,30 +315,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 3: replace the module in the '.cabal' file
     let source = read_file(&config_string);
-    let mut old_module_regex = "".to_string();
-    old_module_regex.push_str(old_module);
-    old_module_regex.push_str("(\\)|\n|,)+?");
-    let re = Regex::new(&old_module_regex).unwrap();
-    let replacements = if !config.copy {
-        re.replacen(&source, 0, |caps: &Captures| {
-            format!("{}{}", new_module, &caps[1])
-        }).to_string()
-    } else {
-        re.replacen(&source, 0, |caps: &Captures| {
-            let filtered_caps: String = (&caps[1])
-                .to_string()
-                .chars()
-                .filter(|c| c != &'\n')
-                .collect();
-            format!(
-                "{}{}, {}{}",
-                new_module,
-                &filtered_caps,
-                old_module,
-                &caps[1]
-            ) // FIXME this should be handled differently! This is bad.
-        }).to_string()
-    };
+    let replacements = parse_cabal(&source, "", "", old_module, new_module, None);
 
     write_file(&config_string, &replacements);
 

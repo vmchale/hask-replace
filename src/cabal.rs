@@ -1,5 +1,46 @@
+extern crate colored;
+
 use utils::*;
-use nom::rest_s;
+use nom::{rest_s, IResult};
+use std::process::exit;
+use self::colored::*;
+
+pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
+    match input {
+        IResult::Done(_, x) => x,
+        _ => {
+            eprintln!(
+                "{}: Could not parse {} file at {}",
+                "Error".red(),
+                file_type,
+                file_name,
+            );
+            exit(0x001)
+        } // FIXME 
+    }
+}
+
+pub fn parse_cabal(
+    input: &str,
+    file_type: &str,
+    file_name: &str,
+    old: &str,
+    new: &str,
+    src: Option<(&str, &str)>,
+) -> String {
+    match src {
+        Some((old_src, new_src)) => concat_str(handle_errors(
+            parse_all(input, old, new, old_src, new_src),
+            file_type,
+            file_name,
+        )),
+        _ => concat_str(handle_errors(
+            parse_all(input, old, new, "", ""),
+            file_type,
+            file_name,
+        )),
+    }
+}
 
 named!(pub boring_line<&str, Vec<&str>>,
   do_parse!(
@@ -27,7 +68,7 @@ named_args!(parse_once<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a 
   )
 );
 
-named_args!(pub parse_source<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a str>>,
+named_args!(parse_source<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a str>>,
     do_parse!(
       a: opt!(skip_stuff) >>
       b: tag!("extra-source-files:") >>

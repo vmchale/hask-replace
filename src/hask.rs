@@ -3,6 +3,20 @@ use cabal::*;
 use utils::*;
 use nom::rest_s;
 
+pub fn parse_haskell(
+    input: &str,
+    file_type: &str,
+    file_name: &str,
+    old: &str,
+    new: &str,
+) -> String {
+    concat_str(handle_errors(
+        parse_full(input, old, new),
+        file_type,
+        file_name,
+    ))
+}
+
 named!(skip<&str, Vec<&str>>,
   alt!(
     skip_comment |

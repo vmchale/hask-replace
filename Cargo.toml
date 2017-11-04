@@ -1,6 +1,6 @@
 [package]
 authors = ["Vanessa McHale <vanessa.mchale@reconfigure.io>"]
-description = "Rename haskell modules at the speed of Rust"
+description = "Rename Haskell modules at the speed of Rust"
 documentation = "https://github.com/vmchale/hask-replace#README"
 homepage = "https://github.com/vmchale/hask-replace"
 license-file = "LICENSE"
@@ -16,11 +16,7 @@ path = "src/main.rs"
 colored = "1.5.2"
 rayon = "0.8.2"
 walkdir = "1.0.7"
-nom = { git = "https://github.com/vmchale/nom", features = ["verbose-errors"] } #{ version = "3.2", features = ["verbose-errors"] }
-
-[dependencies.regex]
-features = ["simd-accel"]
-version = "0.2"
+nom = { git = "https://github.com/vmchale/nom", features = ["verbose-errors"] }
 
 [dependencies.clap]
 features = ["yaml"]
@@ -28,3 +24,7 @@ version = "2.26.0"
 
 [profile.release]
 lto = true
+
+[lib]
+name = "hreplace"
+path = "src/lib.rs"
