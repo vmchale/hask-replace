@@ -85,9 +85,9 @@ named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
 named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, Vec<Vec<&'a str>>>,
   many0!(
     alt!(
-      do_parse!(a: tag!(old) >> b: tag!(":") >> (vec![a, b])) |
+      do_parse!(a: tag!(old) >> b: tag!(".") >> (vec![new, b])) |
       do_parse!(a: is_not!(" ") >> (vec![a])) |
-      do_parse!(a: tag!(" ") >> (vec![a]))
+      do_parse!(a: space >> (vec![a]))
     )
   )
 );
