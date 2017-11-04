@@ -1,4 +1,4 @@
-use nom::multispace;
+// use nom::multispace;
 use cabal::*;
 use utils::*;
 use nom::{rest_s, space};
@@ -44,10 +44,12 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
     t: many0!(
       do_parse!(
         z: tag!("import") >> 
-        b: opt!(multispace) >>
+        b: opt!(space) >>
+        e: opt!(tag!("qualified ")) >>
         c: many0!(skip) >>
-        d : is_not!("( \n") >>
-        (join(vec![vec![z, from_opt(b)], join(c), vec![swap_module(old, new, d)]]))
+        d: is_not!("( \n") >>
+        f: take_until!("\n") >>
+        ({ println!("{}{}", d, f) ; join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), swap_module(old, new, d), f]])})
       )
     ) >>
     (join(vec![join(ts), join(t)]))
@@ -69,13 +71,20 @@ named!(module<&str, Vec<&str>>,
   )
 );
 
+/*
+named_args!(after_import<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+  do_parse!(
+    a: opt!("qualified ")
+    b: is_not!("( \n") >>
+    (*/
+
 named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: module >>
-    b: opt!(multispace) >>
-    c: opt!(skip) >>
+    b: opt!(space) >>
+    c: many0!(skip) >>
     e: is_not!("( \n") >>
-    (join(vec![a, vec![from_opt(b)], from_vec(c), vec![swap_module(old, new, e)]]))
+    (join(vec![a, vec![from_opt(b)], join(c), vec![swap_module(old, new, e)]]))
   )
 );
 
