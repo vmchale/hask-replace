@@ -169,7 +169,13 @@ fn replace_file(p: &PathBuf, old_module: &str, new_module: &str, _: &[String], _
     let mut source = String::new();
     source_file.read_to_string(&mut source).expect("176");
 
-    let replacements = parse_haskell(&source, "", "", old_module, new_module);
+    let replacements = parse_haskell(
+        &source,
+        "Haskell",
+        &p.to_string_lossy().to_string(),
+        old_module,
+        new_module,
+    );
 
     write_file(p, &replacements);
 
@@ -190,7 +196,13 @@ fn rayon_directory_contents(
         let mut source_file = File::open(&p).unwrap();
         let mut source = String::new();
         source_file.read_to_string(&mut source).unwrap();
-        let replacements = parse_haskell(&source, "", "", old_module, new_module);
+        let replacements = parse_haskell(
+            &source,
+            "Haskell",
+            &p.to_string_lossy().to_string(),
+            old_module,
+            new_module,
+        );
         write_file(&p, &replacements);
     })
 
@@ -315,7 +327,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 3: replace the module in the '.cabal' file
     let source = read_file(&config_string);
-    let replacements = parse_cabal(&source, "", "", old_module, new_module, None);
+    let replacements = parse_cabal(&source, &config_string, "", old_module, new_module, None);
 
     write_file(&config_string, &replacements);
 
@@ -345,6 +357,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     if config.copy {
 
         let mut file_name: PathBuf = (&config).dir.to_owned();
+
         // FIXME don't hard-code this.
         file_name.push("src/");
         file_name.push(
@@ -353,6 +366,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
                 .next()
                 .unwrap(),
         );
+
         replace_file(&file_name, old_module, new_module, module_ext, false);
 
     }

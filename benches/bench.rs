@@ -2,12 +2,12 @@
 #![allow(unused_imports)]
 
 extern crate test;
-extern crate cabal;
+extern crate hreplace;
 extern crate nom;
 
 use nom::IResult;
-use cabal::cabal::parse_all;
-use cabal::hask::parse_full;
+use hreplace::cabal::parse_all;
+use hreplace::hask::parse_full;
 use test::test::Bencher;
 use std::fs::File;
 use std::io::prelude::*;

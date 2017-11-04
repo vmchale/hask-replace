@@ -1,7 +1,7 @@
 use nom::multispace;
 use cabal::*;
 use utils::*;
-use nom::rest_s;
+use nom::{rest_s, space};
 
 pub fn parse_haskell(
     input: &str,
@@ -43,12 +43,11 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
     ) >>
     t: many0!(
       do_parse!(
-        a: take_until!("import") >>
         z: tag!("import") >> 
         b: opt!(multispace) >>
         c: many0!(skip) >>
         d : is_not!("( \n") >>
-        (join(vec![vec![a, z, from_opt(b)], join(c), vec![swap_module(old, new, d)]]))
+        (join(vec![vec![z, from_opt(b)], join(c), vec![swap_module(old, new, d)]]))
       )
     ) >>
     (join(vec![join(ts), join(t)]))
@@ -58,15 +57,25 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
 named!(module<&str, Vec<&str>>,
   alt!(
     do_parse!(
-      a: take_until!("module") >>
+      a: opt!(space) >>
       b: tag!("module ") >>
-      (vec![a, b])
+      (vec![from_opt(a), b])
     ) |
     do_parse!(
-      a: take_until!("signature") >>
+      a: opt!(space) >>
       b: tag!("signature ") >>
-      (vec![a, b])
+      (vec![from_opt(a), b])
     )
+  )
+);
+
+named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+  do_parse!(
+    a: module >>
+    b: opt!(multispace) >>
+    c: opt!(skip) >>
+    e: is_not!("( \n") >>
+    (join(vec![a, vec![from_opt(b)], from_vec(c), vec![swap_module(old, new, e)]]))
   )
 );
 
@@ -78,12 +87,10 @@ named_args!(pub parse_full<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>
         boring_line
       )
     ) >>
-    b: module >>
-    c: opt!(multispace) >>
-    d: opt!(skip) >>
-    e: is_not!("( ") >>
-    f: call!(parse_import_list, old, new) >>
+    b: opt!(call!(module_name, old, new)) >>
+    // e: opt!(is_not!("( \n")) >>
+    f: opt!(call!(parse_import_list, old, new)) >>
     g: rest_s >>
-    (join(vec![join(a), b, vec![from_opt(c)], from_vec(d), vec![swap_module(old, new, e)], f, vec![g]]))
+    (join(vec![join(a), from_vec(b), from_vec(f), vec![g]]))
   )
 );
