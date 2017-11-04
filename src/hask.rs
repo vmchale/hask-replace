@@ -49,7 +49,8 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
         c: many0!(skip) >>
         d: is_not!("( \n") >>
         f: take_until!("\n") >>
-        ({ println!("{}{}", d, f) ; join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), swap_module(old, new, d), f]])})
+        g: tag!("\n") >>
+        (join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), swap_module(old, new, d), f, g]]))
       )
     ) >>
     (join(vec![join(ts), join(t)]))
