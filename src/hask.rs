@@ -1,7 +1,7 @@
 // use nom::multispace;
 use cabal::*;
 use utils::*;
-use nom::{rest_s, space};
+use nom::space;
 
 pub fn parse_haskell(
     input: &str,
@@ -49,8 +49,8 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
         c: many0!(skip) >>
         d: is_not!("( \n") >>
         f: take_until!("\n") >>
-        g: tag!("\n") >>
-        (join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), swap_module(old, new, d), f, g]]))
+        g: many1!(tag!("\n")) >>
+        (join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), swap_module(old, new, d), f], g]))
       )
     ) >>
     (join(vec![join(ts), join(t)]))
@@ -72,13 +72,6 @@ named!(module<&str, Vec<&str>>,
   )
 );
 
-/*
-named_args!(after_import<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
-  do_parse!(
-    a: opt!("qualified ")
-    b: is_not!("( \n") >>
-    (*/
-
 named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: module >>
@@ -86,6 +79,28 @@ named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
     c: many0!(skip) >>
     e: is_not!("( \n") >>
     (join(vec![a, vec![from_opt(b)], join(c), vec![swap_module(old, new, e)]]))
+  )
+);
+
+named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, Vec<Vec<&'a str>>>,
+  many0!(
+    alt!(
+      do_parse!(a: tag!(old) >> b: tag!(":") >> (vec![a, b])) |
+      do_parse!(a: is_not!(" ") >> (vec![a])) |
+      do_parse!(a: tag!(" ") >> (vec![a]))
+    )
+  )
+);
+
+named_args!(qualifier_substitution<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+  do_parse!(
+    a: many0!(
+      alt!(
+        do_parse!(a: skip >> (vec![a])) |
+        call!(interesting_line, old, new)
+      )
+    ) >>
+    (join(join(a)))
   )
 );
 
@@ -99,7 +114,7 @@ named_args!(pub parse_full<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>
     ) >>
     b: opt!(call!(module_name, old, new)) >>
     f: opt!(call!(parse_import_list, old, new)) >>
-    g: rest_s >>
-    (join(vec![join(a), from_vec(b), from_vec(f), vec![g]]))
+    g: call!(qualifier_substitution, old, new) >>
+    (join(vec![join(a), from_vec(b), from_vec(f), g]))
   )
 );

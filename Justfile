@@ -4,7 +4,7 @@ check:
 packages: 
     rm -rf lens-* idris-lens dhall-*
     cabal unpack dhall
-    cd dhall-1.7.0 && cargo run -- module . "Dhall.Import" "Dhall.Dependencies" && cabal new-build
+    cargo run -- module dhall-1.7.0 "Dhall.Import" "Dhall.Dependencies" && cd dhall-1.7.0 && cabal new-build
     rm -rf dhall-1.7.0
     cabal unpack lens
     cd lens-4.15.4 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build

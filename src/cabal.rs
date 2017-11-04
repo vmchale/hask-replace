@@ -45,7 +45,7 @@ pub fn parse_cabal(
 named!(pub boring_line<&str, Vec<&str>>,
   do_parse!(
     a: many0!(tag!(" ")) >>
-    b: not!(alt!(tag!("module") | tag!("signature") | tag!("import") | tag!("exposed-modules") | tag!("other-modules") | tag!("extra-source-files") | tag!("\"exposed-modules\":"))) >>
+    b: not!(alt!(tag!("module") | tag!("signature") | tag!("import") | tag!("exposed-modules") | tag!("Exposed-Modules") | tag!("Other-Modules") | tag!("other-modules") | tag!("extra-source-files") | tag!("\"exposed-modules\":"))) >>
     c: take_until!("\n") >>
     d: tag!("\n") >>
     (join(vec![a, vec![b, c, d]]))

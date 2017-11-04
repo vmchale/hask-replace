@@ -1,3 +1,7 @@
+dhall-1.7.0
+lens-4.15.4
+dist
+dist-newstyle
 tags
 Cargo.lock
 target/

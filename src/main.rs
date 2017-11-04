@@ -51,7 +51,7 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.starts_with(".stack-work")) &&
+        (!path.starts_with(".stack-work")) && (!path.starts_with("dist")) &&
             {
                 let p_str = path.to_string_lossy().to_string();
                 (find.into_iter().fold(
@@ -71,6 +71,7 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
 
 fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) -> ProjectOwned {
 
+    // TODO make sure the parent stuff is working.
     let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
 
@@ -281,11 +282,15 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         let name_string: String = name.to_string_lossy().to_string();
         let name_str: &mut str = &mut name_string.as_str().to_owned();
         let old_string: Vec<String> = module_to_file_names(old_module, module_ext);
-        let old_str: &[String] = &old_string; // old_string.as_str();
+        let old_str: &[String] = &old_string;
         let (dir, extn) = trim_matches_only(name_str, old_str);
         (name, dir.to_string(), extn)
     } else {
-        eprintln!("module '{}' does not exist in this project", old_module);
+        eprintln!(
+            "{}: module '{}' does not exist in this project",
+            "Error".red(),
+            old_module
+        );
         exit(0x0001)
     };
 

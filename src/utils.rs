@@ -25,9 +25,3 @@ pub fn concat_str(xs: Vec<&str>) -> String {
 pub fn swap_module<'a>(old: &'a str, new: &'a str, candidate: &'a str) -> &'a str {
     if candidate == old { new } else { candidate }
 }
-
-pub fn cons<T>(x: T, xs: Vec<T>) -> Vec<T> {
-    let mut intermediary = xs;
-    intermediary.push(x);
-    intermediary
-}
