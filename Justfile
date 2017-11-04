@@ -9,13 +9,12 @@ packages:
     cabal unpack lens
     cd lens-4.15.4 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
     rm -rf lens-4.15.4
-
-#git clone https://github.com/HuwCampbell/idris-lens.git
-#cd idris-lens && hr idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
-#rm -rf idris-lens
-#git clone https://github.com/debois/elm-mdl
-#cd elm-mdl && hr elm . Material.Options.Internal Material.Options.Mod && elm-make --yes
-#rm -rf elm-mdl/
+    git clone https://github.com/HuwCampbell/idris-lens.git
+    cd idris-lens && hr idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
+    rm -rf idris-lens
+    git clone https://github.com/debois/elm-mdl
+    cd elm-mdl && hr elm . Material.Options.Internal Material.Options.Mod && elm-make --yes
+    rm -rf elm-mdl/
 
 test:
     rm -rf nothing
