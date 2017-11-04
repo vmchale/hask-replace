@@ -23,16 +23,14 @@ test:
     cargo run -- module test-nothing "Lib" "NewLib.Nested"
     cd test-nothing && cabal new-test
     rm -rf test-nothing nothing
-
-#    rm -rf nothing
-#    pi new idris nothing
-#    cargo run -- idris nothing "Nothing.Lib" "NewLib.Nested"
-#    cd nothing && idris --build nothing.ipkg
-#    rm -rf test-nothing
-#    pi new elm nothing
-#    cargo run -- elm nothing "Update" "Update.Nested.Mod"
-#    cd nothing && elm-make src/main.elm --yes
-#    rm -rf nothing/
+    pi new idris nothing
+    cargo run -- idris nothing "Nothing.Lib" "NewLib.Nested"
+    cd nothing && idris --build nothing.ipkg
+    rm -rf nothing
+    pi new elm nothing
+    cargo run -- elm nothing "Update" "Update.Nested.Mod"
+    cd nothing && elm-make src/main.elm --yes
+    rm -rf nothing/
 
 patch:
     cargo release -l patch --no-dev-version

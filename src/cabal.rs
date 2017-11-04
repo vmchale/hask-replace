@@ -1,13 +1,17 @@
 extern crate colored;
 
 use utils::*;
-use nom::{rest_s, IResult};
+use nom::{rest_s, IResult, space};
 use std::process::exit;
 use self::colored::*;
 
 pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
     match input {
         IResult::Done(_, x) => x,
+        IResult::Error(e) => {
+            eprintln!("{}", e);
+            exit(0x001)
+        }
         _ => {
             eprintln!(
                 "{}: Could not parse {} file at {}",
@@ -106,11 +110,11 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
         do_parse!(
         a: skip_stuff >>
         y: opt!(call!(parse_source, old_src, new_src)) >>
-        w: take_until!("-modules:") >>
-        z: tag!("-modules:") >>
+        w: opt!(space) >>
+        z: alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("modules =")) >>
         b: call!(parse_modules, old, new) >>
-        c: rest_s >>
-        (join(vec![join(a), from_vec(y), vec![w, z], b, vec![c]]))
+        c: opt!(rest_s) >>
+        (join(vec![join(a), from_vec(y), vec![from_opt(w), z], b, vec![from_opt(c)]]))
         )
     ) >>
     b: rest_s >>

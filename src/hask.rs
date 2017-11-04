@@ -88,7 +88,6 @@ named_args!(pub parse_full<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>
       )
     ) >>
     b: opt!(call!(module_name, old, new)) >>
-    // e: opt!(is_not!("( \n")) >>
     f: opt!(call!(parse_import_list, old, new)) >>
     g: rest_s >>
     (join(vec![join(a), from_vec(b), from_vec(f), vec![g]]))

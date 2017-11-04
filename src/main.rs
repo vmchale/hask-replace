@@ -327,7 +327,14 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
 
     // step 3: replace the module in the '.cabal' file
     let source = read_file(&config_string);
-    let replacements = parse_cabal(&source, &config_string, "", old_module, new_module, None);
+    let replacements = parse_cabal(
+        &source,
+        config_ext,
+        &config_string,
+        old_module,
+        new_module,
+        None,
+    );
 
     write_file(&config_string, &replacements);
 
