@@ -63,15 +63,6 @@ fn test_hask() {
 }
 
 #[test]
-fn test_extra_project() {
-    let expected = "cata";
-    assert_eq!(
-        all(parse_packages(&project())).into_iter().last(),
-        Some(expected)
-    );
-}
-
-#[test]
 fn test_exposed_modules() {
     assert_eq!(
         concat_str(all(parse_all(
