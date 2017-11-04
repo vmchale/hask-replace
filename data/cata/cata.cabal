@@ -1,0 +1,28 @@
+name: cata
+version: 0.1.0.0
+cabal-version: >= 1.25
+build-type: Simple
+category: Numeric
+license: BSD2
+synopsis: Dummy package
+description: This is a dummy package.
+maintainer: Vanessa McHale <vanessa.mchale@reconfigure.io>
+-- extra-source-files: stack.yaml
+extra-source-files: stack.yaml
+
+library
+  build-depends: base <= 4.11,
+                 recursion-schemes
+  -- exposed-modules: Mod
+  exposed-modules: Mod
+  default-language: Haskell2010
+
+test-suite sum
+  type: exitcode-stdio-1.0
+  main-is: Main.hs
+  other-modules: Mod
+  build-depends: base <= 4.11,
+                 sum,
+                 cata,
+                 recursion-schemes
+  mixins: cata (Mod as Sig)

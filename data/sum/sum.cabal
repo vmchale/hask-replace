@@ -1,0 +1,15 @@
+name: sum
+version: 0.1.0.0
+cabal-version: >= 1.25
+build-type: Simple
+category: Numeric
+license: BSD2
+synopsis: Dummy signature package
+description: This is a dummy package containing a signature
+maintainer: Vanessa McHale <vanessa.mchale@reconfigure.io>
+extra-source-files: stack.yaml
+
+library
+  build-depends: base <= 4.11
+  signatures: Sig
+  default-language: Haskell2010

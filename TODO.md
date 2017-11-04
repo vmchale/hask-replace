@@ -13,9 +13,11 @@
   - [ ] git stash instead of git commit? make it automatic, ideally.
 # Features
   - [ ] support for backpack (?)
+  - [ ] run regex on .hlint.yaml file as well.
     - [x] support for `.hs-boot` files
     - [ ] support for alex/happy (incl. the extra-src-files field of a .cabal
       file!)
+    - [ ] support for `.hsig` files + cabal parsing, etc.
   - [x] move Idris module
   - [x] move Elm module
   - [x] copy a module

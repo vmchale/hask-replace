@@ -1,0 +1,15 @@
+{-# LANGUAGE CPP             #-}
+{-# LANGUAGE TemplateHaskell #-}
+
+-- module NotMod where
+
+module NewMod (function, makeBaseFunctor) where
+
+-- import           Data.Functor.Foldable
+import           BadModuleName    (ListF (..), cata)
+import           Data.Functor.Foldable.TH (makeBaseFunctor)
+
+function :: (Num a) => [a] -> a
+function = cata a where
+    a Nil         = 0
+    a (Cons x xs) = x + xs

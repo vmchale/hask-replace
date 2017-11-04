@@ -1,3 +1,6 @@
+check:
+    git diff master origin/master
+
 packages: 
     rm -rf lens-* idris-lens dhall-*
     cabal unpack lens
