@@ -3,12 +3,12 @@ check:
 
 packages: 
     rm -rf lens-* idris-lens dhall-*
-    cabal unpack lens
-    cd lens-4.15.4 && hr module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
-    rm -rf lens-4.15.4
     cabal unpack dhall
-    cd dhall-1.7.0 && hr module . "Dhall.Import" "Dhall.Dependencies" && cabal new-build
+    cd dhall-1.7.0 && cargo run -- module . "Dhall.Import" "Dhall.Dependencies" && cabal new-build
     rm -rf dhall-1.7.0
+    cabal unpack lens
+    cd lens-4.15.4 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
+    rm -rf lens-4.15.4
 
 #git clone https://github.com/HuwCampbell/idris-lens.git
 #cd idris-lens && hr idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg

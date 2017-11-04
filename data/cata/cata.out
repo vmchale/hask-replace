@@ -20,7 +20,7 @@ library
 test-suite sum
   type: exitcode-stdio-1.0
   main-is: Main.hs
-  other-modules: Mod
+  other-modules: ReplacementMod
   build-depends: base <= 4.11,
                  sum,
                  cata,

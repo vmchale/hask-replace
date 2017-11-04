@@ -8,10 +8,6 @@ use self::colored::*;
 pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
     match input {
         IResult::Done(_, x) => x,
-        IResult::Error(e) => {
-            eprintln!("{}", e);
-            exit(0x001)
-        }
         _ => {
             eprintln!(
                 "{}: Could not parse {} file at {}",
@@ -111,10 +107,10 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
         a: skip_stuff >>
         y: opt!(call!(parse_source, old_src, new_src)) >>
         w: opt!(space) >>
-        z: alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("modules =") | tag!("\"exposed-modules\":")) >>
+        z: alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("Exposed-Modules:") | tag!("Other-Modules:") | tag!("modules =") | tag!("\"exposed-modules\":")) >>
         b: call!(parse_modules, old, new) >>
-        c: opt!(rest_s) >>
-        (join(vec![join(a), from_vec(y), vec![from_opt(w), z], b, vec![from_opt(c)]]))
+        c: opt!(skip_stuff) >>
+        (join(vec![join(a), from_vec(y), vec![from_opt(w), z], b, join(from_vec(c))]))
         )
     ) >>
     b: rest_s >>
