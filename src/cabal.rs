@@ -128,7 +128,7 @@ named!(step_indented<&str, Vec<&str>>,
 );
 
 named_args!(module_helper<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
-  do_parse!(z: opt!(skip_comment) >> a: step_indented >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | line_ending ) >> (join(vec![from_vec(z), a, vec![swap_module(old, new, b)], vec![c]])))
+  do_parse!(z: opt!(skip_comment) >> a: step_indented >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending ) >> (join(vec![from_vec(z), a, vec![swap_module(old, new, b)], vec![c]])))
 );
 
 named_args!(parse_modules<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,

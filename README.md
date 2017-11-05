@@ -3,8 +3,8 @@
 [![Windows build status](https://ci.appveyor.com/api/projects/status/github/vmchale/hask-replace?svg=true)](https://ci.appveyor.com/project/vmchale/hask-replace)
 [![Build Status](https://travis-ci.org/vmchale/hask-replace.svg?branch=master)](https://travis-ci.org/vmchale/hask-replace)
 
-`hask-replace` is a command-line tool that simplifies the process of renaming
-Haskell, Elm, and Idris modules. It can also be used to rename packages.
+`hask-replace` is a command-line tool for renaming
+Haskell, Elm, and Idris modules.
 
 ## The Pitch
 
@@ -19,12 +19,12 @@ cabal new-build
 
 As you can see, it's a lot less painful than whatever witchcraft you'd have to
 resort to to accomplish the same thing in bash. Not only that, it works for Idris
-and Elm as well as `happy`/`alex` files too!
+and Elm and it detects `happy`/`alex` modules too!
 
 ## The Anti-Pitch
 
-`hr` doesn't attempt to be a full parser for `cabal`, `idris`, or `elm`. While
-`hr` will always transform *valid* projects into valid projects, it won't
+`hr` doesn't attempt to be a full parser for `cabal`, `idris`, `elm`, etc. While
+`hr` promises to always transform *valid* projects into valid projects, it won't
 necessarily point out errors in your project.
 
 ## Installation
@@ -48,13 +48,13 @@ You can find binaries for various platforms on the
 First, install [cargo](https://rustup.rs/). Then:
 
 ```bash
- $ cargo install hask-replace
+ $ cargo install --git https://github.com/vmchale/hask-replace
 ```
 
 You will need to use the nightly release for this to work; if in doubt run
 
 ```bash
-rustup run nightly cargo install hask-replace
+rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
 ```
 
 ## Performance
