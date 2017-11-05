@@ -1,20 +1,34 @@
 check:
     git diff master origin/master
 
-packages: 
-    rm -rf lens-* idris-lens dhall-*
-    cabal unpack dhall
+# only works if you disable checking that the destination module exists.
+bench:
+    @rm -rf dhall-1.7.0
+    @cabal unpack dhall
+    @cargo build --release
+    bench "./target/release/hr module dhall-1.7.0 'Dhall.Import' 'Dhall.Import'"
+    @rm -rf dhall-1.7.0 lens-4.15.4
+    @cabal unpack lens
+    bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal'"
+    @rm -rf lens-4.15.4 haskell-src-exts-1.19.1
+
+packages:
+    @rm -rf lens-* idris-lens dhall-* language-lua-*
+    @cabal unpack language-lua
+    cargo run -- module language-lua-0.10.0 Language.Lua.Annotated.Parser Language.Lua.Annotate.ParserAgain && cd language-lua-0.10.0 && cabal new-build
+    @rm -rf language-lua-0.10.0
+    @cabal unpack dhall
     cargo run -- module dhall-1.7.0 "Dhall.Import" "Dhall.Dependencies" && cd dhall-1.7.0 && cabal new-build
-    rm -rf dhall-1.7.0
-    cabal unpack lens
+    @rm -rf dhall-1.7.0
+    @cabal unpack lens
     cd lens-4.15.4 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
-    rm -rf lens-4.15.4
-    git clone https://github.com/HuwCampbell/idris-lens.git
+    @rm -rf lens-4.15.4
+    @git clone https://github.com/HuwCampbell/idris-lens.git
     cd idris-lens && hr idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
-    rm -rf idris-lens
-    git clone https://github.com/debois/elm-mdl
+    @rm -rf idris-lens
+    @git clone https://github.com/debois/elm-mdl
     cd elm-mdl && hr elm . Material.Options.Internal Material.Options.Mod && elm-make --yes
-    rm -rf elm-mdl/
+    @rm -rf elm-mdl/
 
 test:
     rm -rf nothing

@@ -51,7 +51,8 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.starts_with(".stack-work")) && (!path.starts_with("dist")) &&
+        (!path.to_string_lossy().to_string().contains(".stack-work")) &&
+            (!path.to_string_lossy().to_string().contains("dist")) &&
             {
                 let p_str = path.to_string_lossy().to_string();
                 (find.into_iter().fold(
@@ -72,8 +73,12 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
 fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) -> ProjectOwned {
 
     // TODO make sure the parent stuff is working.
-    let parent = p.parent().unwrap_or(p);
     let s = p.to_string_lossy().to_string();
+    let parent = if s.ends_with(".cabal") {
+        p.parent().unwrap_or(p)
+    } else {
+        p
+    };
 
     let mut config_vec: Vec<String> = Vec::new();
     config_vec.push(config_ext.to_string());
@@ -131,7 +136,8 @@ fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        !path.starts_with(".stack-work") &&
+        (!path.to_string_lossy().to_string().contains(".stack-work")) &&
+            (!path.to_string_lossy().to_string().contains("dist")) &&
             {
                 let p_str = p.file_name().to_string_lossy().to_string();
                 extension.into_iter().fold(
@@ -161,6 +167,7 @@ fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
             x
         })
         .collect::<Vec<String>>();
+    // println!("{:?}", new_vec);
     new_vec
 }
 
@@ -249,13 +256,24 @@ fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
     contents
 }
 
-fn trim_matches_only<'a>(name_str: &'a mut str, old_str: &'a [String]) -> (&'a str, String) {
+fn trim_matches_only<'a>(name_str: &'a mut str, old_str: &'a [String]) -> (String, String) {
     let mut default = "".to_string();
-    let mut default_name = "";
+    let mut default_name = "".to_string();
     for p in old_str {
         if name_str.ends_with(p) {
             default = p.to_string();
-            default_name = name_str.trim_right_matches(p);
+            default_name = name_str.trim_right_matches(p).to_string();
+        }
+    }
+    if default == "".to_string() && default_name == "".to_string() {
+        for p in old_str {
+            if name_str.replace(".hs", ".y").ends_with(p) {
+                default = p.replace(".hs", ".y").to_string();
+                default_name = name_str
+                    .replace(".hs", ".y")
+                    .trim_right_matches(p)
+                    .to_string();
+            }
         }
     }
     let extn = default.chars().skip_while(|c| c != &'.').collect();
@@ -277,7 +295,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
     let old_module_exists = !(old_module_vec.is_empty());
 
     let (old_module_name, src_dir, extn) = if old_module_exists {
-        // TODO these should return multiple possible values.
+        // FIXME pop of multiple values?
         let name = old_module_vec.pop().unwrap();
         let name_string: String = name.to_string_lossy().to_string();
         let name_str: &mut str = &mut name_string.as_str().to_owned();
@@ -463,11 +481,7 @@ fn main() {
 
         let extns = vec![".cabal".to_string(), ".yaml".to_string()];
 
-        let config_project = if command.is_present("stack") {
-            get_config(&dir, &extns, ".yaml", false)
-        } else {
-            get_config(&dir, &extns, ".cabal", false)
-        };
+        let config_project = get_config(&dir, &extns, ".cabal", false);
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());

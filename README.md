@@ -21,6 +21,12 @@ As you can see, it's a lot less painful than whatever witchcraft you'd have to
 resort to to accomplish the same thing in bash. Not only that, it works for Idris
 and Elm too!
 
+## The Anti-Pitch
+
+`hr` doesn't attempt to be a full parser for `cabal`, `idris`, or `elm`. While
+`hr` will always transform *valid* projects into valid projects, it won't
+necessarily point out errors in your project.
+
 ## Installation
 
 ### Script
@@ -55,9 +61,8 @@ rustup run nightly cargo install hask-replace
 
 | Package | Task | Time |
 | ------- | ---- | ---- |
-| lens | Rename module | 14.77ms |
-| dhall | Rename Module | 7.41 ms |
-| haskell-src-exts | Rename Module | 30.29 ms |
+| lens | Rename module | 22.92 ms |
+| dhall | Rename Module | 12.98 ms |
 
 ## Use
 
