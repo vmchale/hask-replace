@@ -19,7 +19,7 @@ cabal new-build
 
 As you can see, it's a lot less painful than whatever witchcraft you'd have to
 resort to to accomplish the same thing in bash. Not only that, it works for Idris
-and Elm too!
+and Elm as well as `happy`/`alex` files too!
 
 ## The Anti-Pitch
 
