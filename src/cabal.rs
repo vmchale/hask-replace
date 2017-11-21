@@ -122,7 +122,6 @@ named!(step_indented<&str, Vec<&str>>,
   alt!(
     do_parse!(a: tag!(",") >> b: many0!(tag!(" ")) >> (join(vec![vec![a], b]))) |
     do_parse!(b: many1!(tag!(" ")) >> (b)) |
-    // do_parse!(a: many1!(tag!(" ")) >> b: tag!(",") >> c: many0!(tag!(" ")) >> ({ println!("here!") ; join(vec![a, vec![b], c])})) |
     do_parse!(a: opt!(tag!("\n")) >> b: eof!() >> (vec![from_opt(a), b])) |
     do_parse!(c: opt!(tag!(",")) >> a: tag!("\n") >> b: many0!(tag!(" ")) >> (join(vec![vec![from_opt(c), a], b])))
   )
