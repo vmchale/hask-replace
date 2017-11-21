@@ -74,7 +74,7 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
 
     // TODO make sure the parent stuff is working.
     let s = p.to_string_lossy().to_string();
-    let parent = if s.ends_with(".cabal") {
+    let parent = if s.ends_with(".cabal") || s.ends_with(".ipkg") || s.ends_with(".json") {
         p.parent().unwrap_or(p)
     } else {
         p

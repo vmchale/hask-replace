@@ -46,11 +46,12 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
         z: tag!("import") >> 
         b: opt!(space) >>
         e: opt!(tag!("qualified ")) >>
+        h: opt!(tag!("public ")) >>
         c: many0!(skip) >>
         d: is_not!("( \n") >>
         f: take_until!("\n") >>
         g: many1!(tag!("\n")) >>
-        (join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), swap_module(old, new, d), f], g]))
+        (join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), from_opt(h), swap_module(old, new, d), f], g]))
       )
     ) >>
     (join(vec![join(ts), join(t)]))
