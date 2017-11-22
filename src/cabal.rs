@@ -108,17 +108,25 @@ named!(pub multispace<&str, &str>,
   )
 );
 
+named!(prolegomena<&str, ()>,
+  do_parse!(
+    skip_stuff >>
+    opt!(space) >>
+    alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("name:") | tag!("Name:") | tag!("Exposed-modules:") | tag!("Other-modules:") | tag!("Exposed-Modules:") | tag!("Other-Modules:") | tag!("modules =") | tag!("\"exposed-modules\":")) >>
+    (())
+  )
+);
+
 named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: many1!(
         do_parse!(
         a: skip_stuff >>
-        y: opt!(call!(parse_source, old_src, new_src)) >>
-        w: opt!(space) >>
-        z: alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("name:") | tag!("Name:") | tag!("Exposed-modules:") | tag!("Other-modules:") | tag!("Exposed-Modules:") | tag!("Other-Modules:") | tag!("modules =") | tag!("\"exposed-modules\":")) >>
-        b: call!(parse_modules, old, new) >>
+        b: opt!(call!(parse_source, old_src, new_src)) >>
+        d: recognize!(prolegomena) >>
+        e: call!(parse_modules, old, new) >>
         c: recognize!(opt!(skip_stuff)) >>
-        (join(vec![vec![a, from_vec(y)], vec![vec![from_opt(w)], vec![z]], vec![b], vec![vec![c]]]))
+        (join(vec![a, from_vec(b), vec![d], e, vec![c]])) // , vec![from_vec(b)], vec![vec![d]], vec![e], vec![vec![c]]])) // join(vec![vec![a, from_vec(y)], vec![vec![from_opt(w)], vec![z]], vec![b], vec![vec![c]]]))
         )
     ) >>
     b: rest_s >>
