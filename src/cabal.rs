@@ -118,7 +118,7 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
         z: alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("name:") | tag!("Name:") | tag!("Exposed-modules:") | tag!("Other-modules:") | tag!("Exposed-Modules:") | tag!("Other-Modules:") | tag!("modules =") | tag!("\"exposed-modules\":")) >>
         b: call!(parse_modules, old, new) >>
         c: recognize!(opt!(skip_stuff)) >>
-        (join(vec![vec![a, from_vec(y)], vec![vec![from_opt(w)], vec![z]], vec![b], vec![vec![c]]]))
+        (join([vec![a, from_vec(y)], vec![vec![from_opt(w)], vec![z], b, vec![c]]])) //, vec![b], vec![vec![c]]]))
         )
     ) >>
     b: rest_s >>
