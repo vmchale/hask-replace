@@ -14,11 +14,14 @@ bench:
     @rm -rf dhall-1.8.0
     @cabal unpack dhall
     @cargo build --release
-    bench "./target/release/hr module dhall-1.8.0 'Dhall.Import' 'Dhall.Import'"
+    bench "./target/release/hr module dhall-1.8.0 'Dhall.Import' 'Dhall.Import' --benchmark-mode"
     @rm -rf dhall-1.8.0 lens-4.15.4
     @cabal unpack lens
-    bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal'"
+    bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
     @rm -rf lens-4.15.4 haskell-src-exts-1.19.1
+    @cabal unpack haskell-src-exts
+    bench "./target/release/hr module haskell-src-exts-1.19.1 'Language.Haskell.Exts.SrcLoc' 'Language.Haskell.Exts.Location' --benchmark-mode"
+    @rm -rf haskell-src-exts-1.19.1
 
 packages:
     @rm -rf lens-* idris-lens dhall-* language-lua-*

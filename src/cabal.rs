@@ -42,14 +42,13 @@ pub fn parse_cabal(
     }
 }
 
-// FIXME rewrite literally everything? lol.
 named!(pub boring_line<&str, &str>,
   recognize!(do_parse!(
     a: alt!(is_a!(" ") | tag!("")) >>
     b: not!(alt!(tag!("module") | tag!("signature") | tag!("import") | tag!("name") | tag!("Name") | tag!("exposed-modules") | tag!("Exposed-modules") | tag!("Other-modules") | tag!("Exposed-Modules") | tag!("Other-Modules") | tag!("other-modules") | tag!("extra-source-files") | tag!("\"exposed-modules\":"))) >>
     c: take_until!("\n") >>
     d: tag!("\n") >>
-    () // vec![a, b, c, d])
+    ()
   ))
 );
 
@@ -69,26 +68,29 @@ named_args!(parse_once<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a 
   )
 );
 
+named!(cabal_head<&str, &str>,
+  recognize!(do_parse!(
+    a: recognize!(opt!(skip_stuff)) >>
+    b: tag!("extra-source-files:") >>
+    (())
+  ))
+);
+
 named_args!(parse_source<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a str>>,
     do_parse!(
-      a: recognize!(opt!(skip_stuff)) >>
-      b: tag!("extra-source-files:") >>
+      a: cabal_head >>
       s: call!(parse_once, old_src, new_src) >>
-      d: opt!(skip_stuff) >>
-      (join(vec![join(vec![vec![a, b], s, from_vec(d)])])) // join(from_vec(d))]))
+      d: recognize!(opt!(skip_stuff)) >>
+      (join(vec![vec![a], s, vec![d]]))
     )
 );
 
-// FIXME we should do replacements in the haddocks as well.
-// links will be inside quotes "" while we can also have
-// Module: ModuleName
-// at the beginning of the haddocks.
 named!(pub skip_comment<&str, &str>,
   recognize!(do_parse!(
     a: tag!("--") >>
     b: take_until!("\n") >>
     c: tag!("\n") >>
-    () // vec![a, b, c])
+    ()
   ))
 );
 
@@ -121,12 +123,12 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
   do_parse!(
     a: many1!(
         do_parse!(
-        a: skip_stuff >>
+        a: recognize!(skip_stuff) >>
         b: opt!(call!(parse_source, old_src, new_src)) >>
         d: recognize!(prolegomena) >>
         e: call!(parse_modules, old, new) >>
         c: recognize!(opt!(skip_stuff)) >>
-        (join(vec![a, from_vec(b), vec![d], e, vec![c]])) // , vec![from_vec(b)], vec![vec![d]], vec![e], vec![vec![c]]])) // join(vec![vec![a, from_vec(y)], vec![vec![from_opt(w)], vec![z]], vec![b], vec![vec![c]]]))
+        (join(vec![vec![a], from_vec(b), vec![d], e, vec![c]]))
         )
     ) >>
     b: rest_s >>

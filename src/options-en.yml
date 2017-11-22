@@ -57,6 +57,9 @@ subcommands:
             short: c
             long: copy
             help: Copy a module rather than moving it.
+        - bench:
+            long: benchmark-mode
+            help: Benchmark mode. You probably don't want this, as it removes some safety measures.
         - spec:
             long: with-spec
             help: "Move test modules as well as the module itself. The spec for 'Module' is assumed to be located in 'ModuleSpec'"

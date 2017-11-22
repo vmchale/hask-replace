@@ -281,7 +281,12 @@ fn trim_matches_only<'a>(name_str: &'a mut str, old_str: &'a [String]) -> (Strin
 }
 
 
-fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () {
+fn replace_all(
+    config: &ProjectOwned,
+    old_module: &str,
+    new_module: &str,
+    benchmark_mode: bool,
+) -> () {
 
     let module_ext: &Vec<String> = &config.module_extension;
     let config_ext: &str = &config.config_extension;
@@ -373,7 +378,7 @@ fn replace_all(config: &ProjectOwned, old_module: &str, new_module: &str) -> () 
         .filter(|p| p.ends_with(&extn))
         .next()
         .unwrap());
-    if Path::new(&new_module_path).exists() {
+    if Path::new(&new_module_path).exists() && !benchmark_mode {
         eprintln!("{}: destination module already exists.", "Error".red());
         exit(0x0001);
     }
@@ -459,14 +464,21 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_module, new_module);
+        let benchmark = command.is_present("bench");
+
+        replace_all(&config_project, old_module, new_module, benchmark);
 
         if command.is_present("spec") {
             let mut old_module_owned = old_module.to_string();
             let mut new_module_owned = new_module.to_string();
             old_module_owned.push_str("Spec");
             new_module_owned.push_str("Spec");
-            replace_all(&config_project, &old_module_owned, &new_module_owned);
+            replace_all(
+                &config_project,
+                &old_module_owned,
+                &new_module_owned,
+                benchmark,
+            );
         }
 
     } else if let Some(command) = matches.subcommand_matches("rename") {
@@ -487,7 +499,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_config, new_config);
+        replace_all(&config_project, old_config, new_config, false);
 
     } else if let Some(command) = matches.subcommand_matches("idris") {
 
@@ -507,7 +519,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_module, new_module);
+        replace_all(&config_project, old_module, new_module, false);
 
     } else if let Some(command) = matches.subcommand_matches("elm") {
 
@@ -527,7 +539,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_module, new_module);
+        replace_all(&config_project, old_module, new_module, false);
 
     } else {
         eprintln!("{}: failed to supply a subcommand", "Error".red());

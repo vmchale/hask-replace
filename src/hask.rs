@@ -33,8 +33,19 @@ named!(block_comment<&str, &str>,
     a: tag!("{-") >>
     b: take_until!("-}") >>
     c: tag!("-}") >>
-    () //vec![a, b, c])
+    ()
   ))
+);
+
+named!(pre_inputs<&str, ()>,
+  do_parse!(
+    tag!("import") >> 
+    recognize!(opt!(multispace)) >>
+    opt!(tag!("qualified ")) >>
+    opt!(tag!("public ")) >>
+    recognize!(many0!(skip)) >>
+    (())
+  )
 );
 
 named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
@@ -47,57 +58,53 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
     )) >>
     t: many0!(
       do_parse!(
-        z: tag!("import") >> 
-        b: recognize!(opt!(multispace)) >>
-        e: opt!(tag!("qualified ")) >>
-        h: opt!(tag!("public ")) >>
-        c: recognize!(many0!(skip)) >>
+        a: recognize!(pre_inputs) >>
         d: is_not!("( \n") >>
         f: take_until!("\n") >>
-        g: is_a!("\n") >> // many1!(tag!("\n")) >>
-        (vec![z, b, c, from_opt(e), from_opt(h), swap_module(old, new, d), f, g])
+        g: is_a!("\n") >>
+        (vec![a, swap_module(old, new, d), f, g])
       )
     ) >>
     (join(vec![vec![ts], join(t)]))
   )
 );
 
-named!(pre_module<&str, Vec<&str>>,
+named!(pre_module<&str, ()>,
   do_parse!(
     a: opt!(space) >>
     b: tag!("module ") >>
-    (vec![from_opt(a), b])
+    (())
   )
 );
 
-named!(pre_signature<&str, Vec<&str>>,
+named!(pre_signature<&str, ()>,
   do_parse!(
     a: opt!(space) >>
     b: tag!("signature ") >>
-    (vec![from_opt(a), b])
+    (())
   )
 );
 
-named!(module<&str, Vec<&str>>,
-  alt!(pre_module | pre_signature)
+named!(module<&str, &str>,
+  recognize!(alt!(pre_module | pre_signature))
 );
 
 named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: module >>
     b: opt!(space) >>
-    c: many0!(skip) >>
+    c: recognize!(many0!(skip)) >>
     e: is_not!("( \n") >>
-    (join(vec![a, vec![from_opt(b)], c, vec![swap_module(old, new, e)]]))
+    (vec![a, from_opt(b), c, swap_module(old, new, e)])
   )
 );
 
 named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, &'a str>,
   recognize!(many0!(
     alt!(
-      do_parse!(a: tag!(old) >> b: tag!(".") >> ()) | // (vec![new, b])) |
-      do_parse!(a: is_not!(" ") >> ()) | //  (vec![a])) |
-      do_parse!(a: space >> ()) // (vec![a]))
+      do_parse!(a: tag!(old) >> b: tag!(".") >> ()) |
+      do_parse!(a: is_not!(" ") >> ()) |
+      do_parse!(a: space >> ())
     )
   )
 ));
@@ -106,7 +113,7 @@ named_args!(qualifier_substitution<'a>(old: &'a str, new: &'a str)<&'a str, Vec<
   do_parse!(
     a: many0!(
       alt!(
-        do_parse!(a: skip >> (a)) |
+        skip |
         call!(interesting_line, old, new)
       )
     ) >>
