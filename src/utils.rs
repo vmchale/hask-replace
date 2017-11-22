@@ -6,12 +6,29 @@ pub fn from_opt(x: Option<&str>) -> &str {
     x.unwrap_or("")
 }
 
-// TODO benchmark this with just calling concat_string instead
-pub fn join<T>(xs: Vec<Vec<T>>) -> Vec<T> {
+pub trait IsEmpty {
+    fn is_empty(&self) -> bool;
+}
+
+impl<'a> IsEmpty for &'a str {
+    fn is_empty(&self) -> bool {
+        self == &""
+    }
+}
+
+impl<T> IsEmpty for Vec<T> {
+    fn is_empty(&self) -> bool {
+        self.len() == 0
+    }
+}
+
+pub fn join<T: IsEmpty>(xs: Vec<Vec<T>>) -> Vec<T> {
     let mut v = Vec::new();
     for x in xs {
         for inner in x {
-            v.push(inner);
+            if !inner.is_empty() {
+                v.push(inner);
+            }
         }
     }
     v

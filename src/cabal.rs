@@ -42,6 +42,7 @@ pub fn parse_cabal(
     }
 }
 
+// FIXME rewrite literally everything? lol.
 named!(pub boring_line<&str, Vec<&str>>,
   do_parse!(
     a: many0!(tag!(" ")) >>

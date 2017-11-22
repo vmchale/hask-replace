@@ -1,3 +1,11 @@
+ci:
+    yamllint src/options-en.yml
+    yamllint appveyor.yml
+    yamllint .travis.yml
+    tomlcheck --file Cargo.toml
+    cargo check
+    cargo test
+
 check:
     git diff master origin/master
 

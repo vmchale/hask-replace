@@ -3,6 +3,10 @@ use cabal::*;
 use utils::*;
 use nom::space;
 
+// opinionated find-and-replace
+// we know already that monadic parser combinators work well.
+// We want something like nom + loc
+
 pub fn parse_haskell(
     input: &str,
     file_type: &str,
@@ -58,19 +62,24 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
   )
 );
 
-named!(module<&str, Vec<&str>>,
-  alt!(
-    do_parse!(
-      a: opt!(space) >>
-      b: tag!("module ") >>
-      (vec![from_opt(a), b])
-    ) |
-    do_parse!(
-      a: opt!(space) >>
-      b: tag!("signature ") >>
-      (vec![from_opt(a), b])
-    )
+named!(pre_module<&str, Vec<&str>>,
+  do_parse!(
+    a: opt!(space) >>
+    b: tag!("module ") >>
+    (vec![from_opt(a), b])
   )
+);
+
+named!(pre_signature<&str, Vec<&str>>,
+  do_parse!(
+    a: opt!(space) >>
+    b: tag!("signature ") >>
+    (vec![from_opt(a), b])
+  )
+);
+
+named!(module<&str, Vec<&str>>,
+  alt!(pre_module | pre_signature)
 );
 
 named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
