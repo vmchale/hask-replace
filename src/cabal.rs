@@ -45,7 +45,22 @@ pub fn parse_cabal(
 named!(pub boring_line<&str, &str>,
   recognize!(do_parse!(
     a: alt!(is_a!(" ") | tag!("")) >>
-    b: not!(alt!(tag!("module") | tag!("signature") | tag!("import") | tag!("name") | tag!("Name") | tag!("exposed-modules") | tag!("Exposed-modules") | tag!("Other-modules") | tag!("Exposed-Modules") | tag!("Other-Modules") | tag!("other-modules") | tag!("extra-source-files") | tag!("\"exposed-modules\":"))) >>
+    b: not!(
+      alt!(
+        tag!("module") |
+        tag!("signature") |
+        tag!("import") |
+        tag!("name") |
+        tag!("Name") |
+        tag!("exposed-modules") |
+        tag!("Exposed-modules") |
+        tag!("Other-modules") |
+        tag!("Exposed-Modules") |
+        tag!("Other-Modules") |
+        tag!("other-modules") |
+        tag!("extra-source-files") |
+        tag!("\"exposed-modules\":"))
+      ) >>
     c: take_until!("\n") >>
     d: tag!("\n") >>
     ()
@@ -63,7 +78,13 @@ named!(pub parse_packages<&str, Vec<&str>>,
 
 named_args!(parse_once<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
-    v: many1!(do_parse!(a: step_indented >> b: is_not!("\n, ") >> (vec![a, swap_module(old_src, new_src, b)]))) >>
+    v: many1!(
+      do_parse!(
+        a: step_indented >>
+        b: is_not!("\n, ") >>
+        (vec![a, swap_module(old_src, new_src, b)])
+      )
+    ) >>
     (join(v))
   )
 );
@@ -114,7 +135,18 @@ named!(prolegomena<&str, ()>,
   do_parse!(
     skip_stuff >>
     opt!(space) >>
-    alt!(tag!("other-modules:") | tag!("exposed-modules:") | tag!("name:") | tag!("Name:") | tag!("Exposed-modules:") | tag!("Other-modules:") | tag!("Exposed-Modules:") | tag!("Other-Modules:") | tag!("modules =") | tag!("\"exposed-modules\":")) >>
+    alt!(
+      tag!("other-modules:") |
+      tag!("exposed-modules:") |
+      tag!("name:") |
+      tag!("Name:") |
+      tag!("Exposed-modules:") |
+      tag!("Other-modules:") | 
+      tag!("Exposed-Modules:") |
+      tag!("Other-Modules:") |
+      tag!("modules =") |
+      tag!("\"exposed-modules\":")
+    ) >>
     (())
   )
 );
@@ -123,12 +155,12 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
   do_parse!(
     a: many1!(
         do_parse!(
-        a: recognize!(skip_stuff) >>
-        b: opt!(call!(parse_source, old_src, new_src)) >>
-        d: recognize!(prolegomena) >>
-        e: call!(parse_modules, old, new) >>
-        c: recognize!(opt!(skip_stuff)) >>
-        (join(vec![vec![a], from_vec(b), vec![d], e, vec![c]]))
+          a: recognize!(skip_stuff) >>
+          b: opt!(call!(parse_source, old_src, new_src)) >>
+          d: recognize!(prolegomena) >>
+          e: call!(parse_modules, old, new) >>
+          c: recognize!(opt!(skip_stuff)) >>
+          (join(vec![vec![a], from_vec(b), vec![d], e, vec![c]]))
         )
     ) >>
     b: rest_s >>

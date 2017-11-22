@@ -99,25 +99,25 @@ named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   )
 );
 
-named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, &'a str>,
-  recognize!(many0!(
+named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, Vec<Vec<&'a str>>>,
+  many0!(
     alt!(
-      do_parse!(a: tag!(old) >> b: tag!(".") >> ()) |
-      do_parse!(a: is_not!(" ") >> ()) |
-      do_parse!(a: space >> ())
+      do_parse!(a: tag!(old) >> b: tag!(".") >> (vec![a, b])) |
+      do_parse!(a: is_not!(" ") >> (vec![a])) |
+      do_parse!(a: space >> (vec![a]))
     )
   )
-));
+);
 
 named_args!(qualifier_substitution<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: many0!(
       alt!(
-        skip |
-        call!(interesting_line, old, new)
+        do_parse!(a: skip >> (vec![a])) |
+        do_parse!(a: call!(interesting_line, old, new) >> (join(a)))
       )
     ) >>
-    (a)
+    (join(a))
   )
 );
 

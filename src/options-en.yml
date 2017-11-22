@@ -49,10 +49,10 @@ subcommands:
             index: 3
             required: true
             help: Name of the new module
-        - hpack:
-            short: y
-            long: hpack
-            help: "Flag to be used when the project uses an 'hpack.yaml' file rather than a '.cabal' file."
+            # - hpack:
+            # short: y
+            # long: hpack
+            # help: "Flag to be used when the project uses an 'hpack.yaml' file rather than a '.cabal' file."
         - copy:
             short: c
             long: copy

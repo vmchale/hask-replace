@@ -61,12 +61,12 @@ rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
 
 | Package | Task | Time |
 | ------- | ---- | ---- |
-| lens | Rename module | 13.85 ms |
+| lens | Rename Module | 13.85 ms |
 | dhall | Rename Module | 7.321 ms |
 
 ## Use
 
-`hr` can also be used on Idris.
+`hr` can also be used on Idris and Elm projects.
 
 ```bash
 git clone https://github.com/HuwCampbell/idris-lens.git
