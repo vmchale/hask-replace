@@ -6,6 +6,28 @@ pub fn from_opt(x: Option<&str>) -> &str {
     x.unwrap_or("")
 }
 
+pub trait AsString {
+    fn as_string(self) -> String;
+}
+
+impl<'a> AsString for Vec<String> {
+    fn as_string(self) -> String {
+        self.iter().fold("".to_string(), |acc, x| acc + x)
+    }
+}
+
+impl<'a> AsString for &'a str {
+    fn as_string(self) -> String {
+        self.to_string()
+    }
+}
+
+impl<'a> AsString for Vec<&'a str> {
+    fn as_string(self) -> String {
+        concat_str(self)
+    }
+}
+
 pub trait IsEmpty {
     fn is_empty(&self) -> bool;
 }

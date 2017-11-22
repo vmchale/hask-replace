@@ -39,26 +39,26 @@ named!(block_comment<&str, Vec<&str>>,
 
 named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
-    ts: many0!(
+    ts: recognize!(many0!(
       alt!(
         skip |
         boring_line
       )
-    ) >>
+    )) >>
     t: many0!(
       do_parse!(
         z: tag!("import") >> 
-        b: opt!(space) >>
+        b: recognize!(opt!(multispace)) >>
         e: opt!(tag!("qualified ")) >>
         h: opt!(tag!("public ")) >>
-        c: many0!(skip) >>
+        c: recognize!(many0!(skip)) >>
         d: is_not!("( \n") >>
         f: take_until!("\n") >>
-        g: many1!(tag!("\n")) >>
-        (join(vec![vec![z, from_opt(b)], join(c), vec![from_opt(e), from_opt(h), swap_module(old, new, d), f], g]))
+        g: is_a!("\n") >> // many1!(tag!("\n")) >>
+        (vec![z, b, c, from_opt(e), from_opt(h), swap_module(old, new, d), f, g])
       )
     ) >>
-    (join(vec![join(ts), join(t)]))
+    (join(vec![vec![ts], join(t)]))
   )
 );
 
