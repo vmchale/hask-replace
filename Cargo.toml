@@ -7,6 +7,7 @@ license-file = "LICENSE"
 name = "hask-replace"
 repository = "https://github.com/vmchale/hask-replace"
 version = "1.0.0"
+keywords = ["haskell", "development", "devtools"]
 
 [[bin]]
 name = "hr"

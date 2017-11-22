@@ -26,6 +26,8 @@ matrix:
       rust: nightly
     - env: TARGET=x86_64-unknown-netbsd DISABLE_TESTS=1
       rust: nightly
+    - env: TARGET=x86_64-unknown-dragonfly
+      rust: nightly
 
     # Other architectures
     - env: TARGET=aarch64-unknown-linux-gnu
@@ -42,15 +44,28 @@ matrix:
       rust: nightly
     - env: TARGET=arm-unknown-linux-musleabi
       rust: nightly
+    - env: TARGET=sparcv9-sun-solaris DISABLE_TESTS=1
+      rust: nightly
+    - env: TARGET=x86_64-sun-solaris DISABLE_TESTS=1
+      rust: nightly
+    - env: TARGET=x86_64-rumprun-netbsd
+      rust: nightly
+    - env: TARGET=x86_64-unknown-redox
+      rust: nightly
+
   allow_failures:
-    - env: TARGET=x86_64-pc-windows-gnu
-    - env: TARGET=x86_64-pc-windows-msvc DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-linux-musl
     - env: TARGET=arm-unknown-linux-musleabi
     - env: TARGET=arm-unknown-linux-gnueabi
     - env: TARGET=sparc64-unknown-linux-gnu
     - env: TARGET=armv7-unknown-linux-musleabihf
     - env: TARGET=armv7-unknown-linux-gnueabihf
     - env: TARGET=s390x-unknown-linux-gnu DISABLE_TESTS=1
+    - env: TARGET=sparcv9-sun-solaris DISABLE_TESTS=1
+    - env: TARGET=x86_64-sun-solaris DISABLE_TESTS=1
+    - env: TARGET=x86_64-unknown-dragonfly
+    - env: TARGET=x86_64-rumprun-netbsd
+    - env: TARGET=x86_64-unknown-redox
 
 before_install: set -e
 
