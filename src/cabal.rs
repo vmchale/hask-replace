@@ -45,11 +45,11 @@ pub fn parse_cabal(
 // FIXME rewrite literally everything? lol.
 named!(pub boring_line<&str, Vec<&str>>,
   do_parse!(
-    a: many0!(tag!(" ")) >>
+    a: alt!(is_a!(" ") | tag!("")) >>
     b: not!(alt!(tag!("module") | tag!("signature") | tag!("import") | tag!("name") | tag!("Name") | tag!("exposed-modules") | tag!("Exposed-modules") | tag!("Other-modules") | tag!("Exposed-Modules") | tag!("Other-Modules") | tag!("other-modules") | tag!("extra-source-files") | tag!("\"exposed-modules\":"))) >>
     c: take_until!("\n") >>
     d: tag!("\n") >>
-    (join(vec![a, vec![b, c, d]]))
+    (vec![a, b, c, d])
   )
 );
 
@@ -101,6 +101,13 @@ named!(skip_stuff<&str, Vec<Vec<&str>>>,
   )
 );
 
+named!(pub multispace<&str, &str>,
+  alt!(
+    is_a!(" ") |
+    tag!("")
+  )
+);
+
 named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: many1!(
@@ -121,10 +128,10 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
 
 named!(step_indented<&str, Vec<&str>>,
   alt!(
-    do_parse!(a: tag!(",") >> b: many0!(tag!(" ")) >> (join(vec![vec![a], b]))) |
-    do_parse!(b: many1!(tag!(" ")) >> (b)) |
+    do_parse!(a: tag!(",") >> b: multispace >> (vec![a, b])) |
+    do_parse!(b: is_a!(" ") >> (vec![b])) |
     do_parse!(a: opt!(tag!("\n")) >> b: eof!() >> (vec![from_opt(a), b])) |
-    do_parse!(c: opt!(tag!(",")) >> a: tag!("\n") >> b: many0!(tag!(" ")) >> (join(vec![vec![from_opt(c), a], b])))
+    do_parse!(c: opt!(tag!(",")) >> a: tag!("\n") >> b: multispace >> (vec![from_opt(c), a, b]))
   )
 );
 
