@@ -143,13 +143,22 @@ named!(step_indented<&str, &str>,
   )
 );
 
+named!(module_prolegomena<&str, ()>,
+  do_parse!(
+    opt!(skip_comment) >>
+    step_indented >>
+    opt!(tag!(", ")) >>
+    (())
+  )
+);
+
 named_args!(module_helper<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
-  do_parse!(z: opt!(skip_comment) >> a: step_indented >> x: opt!(tag!(", ")) >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending ) >> (vec![from_opt(z), from_opt(x), a, swap_module(old, new, b), c]))
+  do_parse!(a: recognize!(module_prolegomena) >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending ) >> (vec![a, swap_module(old, new, b), c]))
 );
 
 named_args!(parse_modules<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
-    first: do_parse!(z: opt!(skip_comment) >> a: step_indented >> x: opt!(tag!(", ")) >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending | eof!()) >> (vec![from_opt(z), from_opt(x), a, swap_module(old, new, b), c])) >>
+    first: do_parse!(a: recognize!(module_prolegomena) >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending | eof!()) >> (vec![a, swap_module(old, new, b), c])) >>
     v: many0!(call!(module_helper, old, new)) >>
     (join(join(vec![vec![first], v])))
   )
