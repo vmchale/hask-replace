@@ -130,7 +130,7 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
         )
     ) >>
     b: rest_s >>
-    (join(vec![join(join(a)), vec![b]]))
+    (join(vec![join(a), vec![b]]))
   )
 );
 
