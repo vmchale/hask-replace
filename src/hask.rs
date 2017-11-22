@@ -21,20 +21,20 @@ pub fn parse_haskell(
     ))
 }
 
-named!(skip<&str, Vec<&str>>,
-  alt!(
+named!(skip<&str, &str>,
+  recognize!(alt!(
     skip_comment |
     block_comment
-  )
+  ))
 );
 
-named!(block_comment<&str, Vec<&str>>,
-  do_parse!(
+named!(block_comment<&str, &str>,
+  recognize!(do_parse!(
     a: tag!("{-") >>
     b: take_until!("-}") >>
     c: tag!("-}") >>
-    (vec![a, b, c])
-  )
+    () //vec![a, b, c])
+  ))
 );
 
 named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
@@ -88,43 +88,43 @@ named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
     b: opt!(space) >>
     c: many0!(skip) >>
     e: is_not!("( \n") >>
-    (join(vec![a, vec![from_opt(b)], join(c), vec![swap_module(old, new, e)]]))
+    (join(vec![a, vec![from_opt(b)], c, vec![swap_module(old, new, e)]]))
   )
 );
 
-named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, Vec<Vec<&'a str>>>,
-  many0!(
+named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, &'a str>,
+  recognize!(many0!(
     alt!(
-      do_parse!(a: tag!(old) >> b: tag!(".") >> (vec![new, b])) |
-      do_parse!(a: is_not!(" ") >> (vec![a])) |
-      do_parse!(a: space >> (vec![a]))
+      do_parse!(a: tag!(old) >> b: tag!(".") >> ()) | // (vec![new, b])) |
+      do_parse!(a: is_not!(" ") >> ()) | //  (vec![a])) |
+      do_parse!(a: space >> ()) // (vec![a]))
     )
   )
-);
+));
 
 named_args!(qualifier_substitution<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: many0!(
       alt!(
-        do_parse!(a: skip >> (vec![a])) |
+        do_parse!(a: skip >> (a)) |
         call!(interesting_line, old, new)
       )
     ) >>
-    (join(join(a)))
+    (a)
   )
 );
 
 named_args!(pub parse_full<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
-    a: many0!(
+    a: recognize!(many0!(
       alt!(
         skip |
         boring_line
       )
-    ) >>
+    )) >>
     b: opt!(call!(module_name, old, new)) >>
     f: opt!(call!(parse_import_list, old, new)) >>
     g: call!(qualifier_substitution, old, new) >>
-    (join(vec![join(a), from_vec(b), from_vec(f), g]))
+    (join(vec![vec![a], from_vec(b), from_vec(f), g]))
   )
 );
