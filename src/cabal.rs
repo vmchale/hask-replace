@@ -50,8 +50,6 @@ named!(pub boring_line<&str, &str>,
         tag!("module") |
         tag!("signature") |
         tag!("import") |
-        tag!("name") |
-        tag!("Name") |
         tag!("exposed-modules") |
         tag!("Exposed-modules") |
         tag!("Other-modules") |
@@ -89,6 +87,7 @@ named_args!(parse_once<'a>(old_src: &'a str, new_src: &'a str)<&'a str, Vec<&'a 
   )
 );
 
+// jump to relevant stuff.
 named!(cabal_head<&str, &str>,
   recognize!(do_parse!(
     a: recognize!(opt!(skip_stuff)) >>

@@ -125,8 +125,14 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
   many0!(
     alt!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      is_not!("ABCDEFGHIJKLMNOPQRSTUV") |
-      is_not!(" ")
+      is_not!("ABCDEFGHIJKLMNOPQRSTUVWXYZ-{") |
+      is_not!(" \n-{") |
+      recognize!(
+        alt!(
+          do_parse!(tag!("-") >> is_not!("-") >> (())) |
+          do_parse!(tag!("{") >> is_not!("-") >> (()))
+        )
+      )
     )
   )
 );
