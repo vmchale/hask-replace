@@ -15,7 +15,10 @@ pub fn parse_haskell(
     old: &str,
     new: &str,
 ) -> String {
+
+    // this is less stupid than it looks because nom parses by byte.
     let special = ("-{".to_string() + &old[0..1]).to_string();
+
     concat_str(handle_errors(
         parse_full(
             input,
@@ -28,6 +31,7 @@ pub fn parse_haskell(
         file_type,
         file_name,
     ))
+
 }
 
 // skip comment
