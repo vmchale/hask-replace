@@ -7,6 +7,7 @@ use nom::space;
 // we know already that monadic parser combinators work well.
 // We want something like nom + loc
 
+/// Perform find-and-replace on source file.
 pub fn parse_haskell(
     input: &str,
     file_type: &str,
@@ -15,12 +16,19 @@ pub fn parse_haskell(
     new: &str,
 ) -> String {
     concat_str(handle_errors(
-        parse_full(input, old, new),
+        parse_full(
+            input,
+            old,
+            &(old.to_string() + "."),
+            new,
+            &(new.to_string() + "."),
+        ),
         file_type,
         file_name,
     ))
 }
 
+// skip comment
 named!(skip<&str, &str>,
   recognize!(alt!(
     skip_comment |
@@ -28,6 +36,7 @@ named!(skip<&str, &str>,
   ))
 );
 
+// skip block comment
 named!(block_comment<&str, &str>,
   recognize!(do_parse!(
     a: tag!("{-") >>
@@ -37,6 +46,7 @@ named!(block_comment<&str, &str>,
   ))
 );
 
+// parse import ... block
 named!(pre_inputs<&str, ()>,
   do_parse!(
     tag!("import") >> 
@@ -69,6 +79,7 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
   )
 );
 
+// parse 'module' keyword
 named!(pre_module<&str, ()>,
   do_parse!(
     a: opt!(space) >>
@@ -77,6 +88,7 @@ named!(pre_module<&str, ()>,
   )
 );
 
+// parse 'signature' keyword
 named!(pre_signature<&str, ()>,
   do_parse!(
     a: opt!(space) >>
@@ -85,43 +97,54 @@ named!(pre_signature<&str, ()>,
   )
 );
 
+// parse 'module' or 'signature' keyword
 named!(module<&str, &str>,
   recognize!(alt!(pre_module | pre_signature))
 );
 
-named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+named!(pre_module_replace<&str, ()>,
   do_parse!(
-    a: module >>
-    b: opt!(space) >>
-    c: recognize!(many0!(skip)) >>
-    e: is_not!("( \n") >>
-    (vec![a, from_opt(b), c, swap_module(old, new, e)])
+    module >>
+    opt!(space) >>
+    many0!(skip) >>
+    (())
   )
 );
 
-named_args!(interesting_line<'a>(old: &'a str, new: &'a str)<&'a str, Vec<Vec<&'a str>>>,
+// replace module name
+named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+  do_parse!(
+    a: recognize!(pre_module_replace) >>
+    e: is_not!("( \n") >>
+    (vec![a, swap_module(old, new, e)])
+  )
+);
+
+// parse a line, substituting when necessary.
+named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
     alt!(
-      do_parse!(a: tag!(old) >> b: tag!(".") >> (vec![swap_module(old, new, a), b])) |
-      do_parse!(a: is_not!(" ") >> (vec![a])) |
-      do_parse!(a: space >> (vec![a]))
+      do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
+      is_not!("ABCDEFGHIJKLMNOPQRSTUV") |
+      is_not!(" ")
     )
   )
 );
 
-named_args!(qualifier_substitution<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+// parse a line or skip commented line
+named_args!(qualifier_substitution<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: many0!(
       alt!(
         do_parse!(a: skip >> (vec![a])) |
-        do_parse!(a: call!(interesting_line, old, new) >> (join(a)))
+        do_parse!(a: call!(interesting_line, old, old_dot, new, new_dot) >> (a))
       )
     ) >>
     (join(a))
   )
 );
 
-named_args!(pub parse_full<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+named_args!(pub parse_full<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: recognize!(many0!(
       alt!(
@@ -131,7 +154,7 @@ named_args!(pub parse_full<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>
     )) >>
     b: opt!(call!(module_name, old, new)) >>
     f: opt!(call!(parse_import_list, old, new)) >>
-    g: call!(qualifier_substitution, old, new) >>
+    g: call!(qualifier_substitution, old, old_dot, new, new_dot) >>
     (join(vec![vec![a], from_vec(b), from_vec(f), g]))
   )
 );

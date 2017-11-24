@@ -2,10 +2,6 @@ pub fn from_vec<T>(x: Option<Vec<T>>) -> Vec<T> {
     x.unwrap_or(vec![])
 }
 
-pub fn from_opt(x: Option<&str>) -> &str {
-    x.unwrap_or("")
-}
-
 pub trait AsString {
     fn as_string(self) -> String;
 }

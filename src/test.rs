@@ -54,9 +54,13 @@ fn cabal() -> String {
 fn test_hask() {
     assert_eq!(
         concat_str(all(parse_full(
-            &concat_str(all(parse_full(&hask(), "Mod", "NewMod"))),
+            &concat_str(all(
+                parse_full(&hask(), "Mod", "Mod.", "NewMod", "NewMod."),
+            )),
             "Data.Functor.Foldable",
+            "Data.Functor.Foldable.",
             "BadModuleName",
+            "BadModuleName.",
         ))),
         modified_hask()
     );
@@ -81,7 +85,7 @@ fn test_signature_names() {
     let expected = "signature NewSig ( function ) where\n\nfunction :: (Num a) => [a] -> a\n"
         .to_string();
     assert_eq!(
-        concat_str(all(parse_full(&sig(), "Sig", "NewSig"))),
+        concat_str(all(parse_full(&sig(), "Sig", "Sig.", "NewSig", "NewSig."))),
         expected
     );
 }

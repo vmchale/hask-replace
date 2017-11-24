@@ -15,7 +15,7 @@ use std::io::prelude::*;
 #[bench]
 fn bench_hask(b: &mut Bencher) {
     let string = hask();
-    b.iter(|| parse_full(&string, "Mod", "NewMod"))
+    b.iter(|| parse_full(&string, "Mod", "Mod.", "NewMod", "NewMod."))
 }
 
 #[bench]
@@ -28,7 +28,9 @@ fn bench_cabal(b: &mut Bencher) {
 #[bench]
 fn bench_hask_everything(b: &mut Bencher) {
     let string = hask();
-    b.iter(|| concat_str(all(parse_full(&string, "Mod", "NewMod"))))
+    b.iter(|| {
+        concat_str(all(parse_full(&string, "Mod", "Mod.", "NewMod", "NewMod.")))
+    })
 }
 
 fn concat_str(xs: Vec<&str>) -> String {
