@@ -15,7 +15,7 @@ pub fn parse_haskell(
     old: &str,
     new: &str,
 ) -> String {
-    let special = ("-{".to_string() + &old[0..1].to_string()).to_string();
+    let special = ("-{".to_string() + &old[0..1]).to_string();
     concat_str(handle_errors(
         parse_full(
             input,
@@ -116,7 +116,7 @@ named!(pre_module_replace<&str, ()>,
 named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: recognize!(pre_module_replace) >>
-    e: is_not!("( \n") >>
+    e: is_not!(" \n(") >>
     (vec![a, swap_module(old, new, e)])
   )
 );
@@ -126,7 +126,7 @@ named!(fancy_stuff<&str, &str>,
     alt!(
       do_parse!(
         tag!("-") >> 
-        is_not!("- ") >>
+        is_not!(" -") >>
         (())
       ) |
       do_parse!(
@@ -142,13 +142,12 @@ named!(fancy_stuff<&str, &str>,
   )
 );
 
-
 // parse a line, substituting when necessary.
 named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
     alt!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      is_not!(special) | // is_not!("D-{") |
+      is_not!(special) |
       is_not!(" \n-{") |
       fancy_stuff
     )
