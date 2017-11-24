@@ -15,6 +15,7 @@ pub fn parse_haskell(
     old: &str,
     new: &str,
 ) -> String {
+    let special = ("-{".to_string() + &old[0..1].to_string()).to_string();
     concat_str(handle_errors(
         parse_full(
             input,
@@ -22,6 +23,7 @@ pub fn parse_haskell(
             &(old.to_string() + "."),
             new,
             &(new.to_string() + "."),
+            &special,
         ),
         file_type,
         file_name,
@@ -70,9 +72,8 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
       do_parse!(
         a: recognize!(pre_inputs) >>
         d: is_not!("( \n") >>
-        f: take_until!("\n") >>
-        g: is_a!("\n") >>
-        (vec![a, swap_module(old, new, d), f, g])
+        f: recognize!(do_parse!(take_until!("\n") >> is_a!("\n") >> (()))) >>
+        (vec![a, swap_module(old, new, d), f])
       )
     ) >>
     (join(vec![vec![ts], join(t)]))
@@ -125,26 +126,29 @@ named!(fancy_stuff<&str, &str>,
     alt!(
       do_parse!(
         tag!("-") >> 
-        alt!(is_not!("- ")) >>
+        is_not!("- ") >>
         (())
       ) |
       do_parse!(
         tag!("{") >> 
-        alt!(is_not!("-")) >>
+        is_not!("-") >>
         (())
       ) |
-      do_parse!(tag!("- ") >> (()))
+      do_parse!(
+        tag!("- ") >>
+        (())
+      )
     )
   )
 );
 
 
 // parse a line, substituting when necessary.
-named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
+named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
     alt!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      is_not!("ABCDEFGHIJKLMNOPQRSTUVWXYZ-{") |
+      is_not!(special) | // is_not!("D-{") |
       is_not!(" \n-{") |
       fancy_stuff
     )
@@ -152,19 +156,19 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
 );
 
 // parse a line or skip commented line
-named_args!(qualifier_substitution<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
+named_args!(qualifier_substitution<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: many0!(
       alt!(
         do_parse!(a: skip >> (vec![a])) |
-        do_parse!(a: call!(interesting_line, old, old_dot, new, new_dot) >> (a))
+        do_parse!(a: call!(interesting_line, old, old_dot, new, new_dot, special) >> (a))
       )
     ) >>
     (join(a))
   )
 );
 
-named_args!(pub parse_full<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
+named_args!(pub parse_full<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: recognize!(many0!(
       alt!(
@@ -174,7 +178,7 @@ named_args!(pub parse_full<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new
     )) >>
     b: opt!(call!(module_name, old, new)) >>
     f: opt!(call!(parse_import_list, old, new)) >>
-    g: call!(qualifier_substitution, old, old_dot, new, new_dot) >>
+    g: call!(qualifier_substitution, old, old_dot, new, new_dot, special) >>
     (join(vec![vec![a], from_vec(b), from_vec(f), g]))
   )
 );
