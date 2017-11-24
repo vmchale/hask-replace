@@ -120,6 +120,25 @@ named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   )
 );
 
+named!(fancy_stuff<&str, &str>,
+  recognize!(
+    alt!(
+      do_parse!(
+        tag!("-") >> 
+        alt!(is_not!("- ")) >>
+        (())
+      ) |
+      do_parse!(
+        tag!("{") >> 
+        alt!(is_not!("-")) >>
+        (())
+      ) |
+      do_parse!(tag!("- ") >> (()))
+    )
+  )
+);
+
+
 // parse a line, substituting when necessary.
 named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
@@ -127,14 +146,7 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
       is_not!("ABCDEFGHIJKLMNOPQRSTUVWXYZ-{") |
       is_not!(" \n-{") |
-      recognize!(
-        alt!(
-          do_parse!(tag!("-") >> is_not!("-ABCDEFGHIJKLMNOPQRSTUVWXYZ") >> (())) |
-          do_parse!(tag!("{") >> is_not!("-ABCDEFGHIJKLMNOPQRSTUVWXYZ") >> (())) |
-          do_parse!(tag!("-") >> is_not!("-") >> (())) |
-          do_parse!(tag!("{") >> is_not!("-") >> (()))
-        )
-      )
+      fancy_stuff
     )
   )
 );
