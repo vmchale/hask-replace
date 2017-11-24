@@ -129,6 +129,8 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
       is_not!(" \n-{") |
       recognize!(
         alt!(
+          do_parse!(tag!("-") >> is_not!("-ABCDEFGHIJKLMNOPQRSTUVWXYZ") >> (())) |
+          do_parse!(tag!("{") >> is_not!("-ABCDEFGHIJKLMNOPQRSTUVWXYZ") >> (())) |
           do_parse!(tag!("-") >> is_not!("-") >> (())) |
           do_parse!(tag!("{") >> is_not!("-") >> (()))
         )
