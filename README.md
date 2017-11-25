@@ -61,8 +61,8 @@ rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
 
 | Package | Task | Time |
 | ------- | ---- | ---- |
-| lens | Rename Module | 5.981 ms |
-| dhall | Rename Module | 9.521 ms |
+| lens | Rename Module | 6.205 ms |
+| dhall | Rename Module | 10.65 ms |
 
 ## Use
 
