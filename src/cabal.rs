@@ -59,7 +59,7 @@ named!(pub boring_line<&str, &str>,
         tag!("other-modules") |
         tag!("extra-source-files") |
         tag!("\"exposed-modules\":") |
-        tag!("\"devDependencies\":"))
+        tag!("\"depends\":"))
       ) >>
     c: take_until!("\n") >>
     d: tag!("\n") >>
@@ -147,7 +147,7 @@ named!(prolegomena<&str, ()>,
       tag!("Other-Modules:") |
       tag!("modules =") |
       tag!("\"exposed-modules\":") | // FIXME what if exposed-modules doesn't exist?
-      tag!("\"devDependencies\":")
+      tag!("\"depends\":")
     ) >>
     (())
   )
