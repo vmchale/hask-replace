@@ -44,12 +44,13 @@ pub fn parse_cabal(
 
 named!(pub boring_line<&str, &str>,
   recognize!(do_parse!(
-    a: alt!(is_a!(" ") | tag!("")) >>
+    a: opt!(multispace) >>
     b: not!(
       alt!(
         tag!("module") |
         tag!("signature") |
         tag!("import") |
+        recognize!(do_parse!(is_a!(",) ") >> tag!("module") >> (()))) |
         tag!("exposed-modules") |
         tag!("Exposed-modules") |
         tag!("Other-modules") |
@@ -57,7 +58,8 @@ named!(pub boring_line<&str, &str>,
         tag!("Other-Modules") |
         tag!("other-modules") |
         tag!("extra-source-files") |
-        tag!("\"exposed-modules\":"))
+        tag!("\"exposed-modules\":") |
+        tag!("\"devDependencies\":"))
       ) >>
     c: take_until!("\n") >>
     d: tag!("\n") >>
@@ -144,7 +146,8 @@ named!(prolegomena<&str, ()>,
       tag!("Exposed-Modules:") |
       tag!("Other-Modules:") |
       tag!("modules =") |
-      tag!("\"exposed-modules\":")
+      tag!("\"exposed-modules\":") | // FIXME what if exposed-modules doesn't exist?
+      tag!("\"devDependencies\":")
     ) >>
     (())
   )

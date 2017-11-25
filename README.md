@@ -66,7 +66,7 @@ rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
 
 ## Use
 
-`hr` can also be used on Idris and Elm projects.
+`hr` can also be used on Idris projects.
 
 ```bash
 git clone https://github.com/HuwCampbell/idris-lens.git

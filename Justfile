@@ -9,7 +9,6 @@ ci:
 check:
     git diff master origin/master
 
-# only works if you disable checking that the destination module exists.
 bench:
     @rm -rf dhall-1.8.0
     @cabal unpack dhall
@@ -20,8 +19,12 @@ bench:
     bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
     @rm -rf lens-4.15.4 haskell-src-exts-1.19.1
 
+
 packages:
-    @rm -rf lens-* idris-lens dhall-* language-lua-*
+    @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka
+    @git clone https://github.com/slamdata/purescript-matryoshka.git
+    cd purescript-matryoshka && cargo run -- p . Matryoshka.DistributiveLaw Matryoshka.DL && npm install && bower install && npm run -s build && npm run -s test
+    @rm -rf purescript-matryoshka
     @git clone https://github.com/HuwCampbell/idris-lens.git
     cd idris-lens && cargo run -- idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
     @rm -rf idris-lens

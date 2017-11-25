@@ -3,6 +3,14 @@ name: hask-replace
 author: Vanessa McHale <vamchale@gmail.com>
 about: Rename modules across Haskell, Idris, and Elm projects
 subcommands:
+  - update:
+      visible_alias: "u"
+      about: Update hask-replace
+      args:
+        - force:
+            short: f
+            long: force
+            help: Force installation when binary already exists.
   - rename:
       visible_alias: "r"
       about: Rename a cabal package (experimental).
@@ -99,6 +107,33 @@ subcommands:
             index: 1
             required: true
             help: "Directory or 'elm-package.json' file for the project"
+        - stash:
+            short: s
+            long: stash
+            help: Stash using git before making any changes
+        - old:
+            value_name: OLD_MODULE
+            index: 2
+            required: true
+            help: Name of old module
+        - new:
+            value_name: NEW_MODULE
+            index: 3
+            required: true
+            help: Name of the new module
+        - copy:
+            short: c
+            long: copy
+            help: Copy a module rather than moving it.
+  - purescript:
+      visible_alias: "p"
+      about: Replace a module across a PureScript project (experimental)
+      args:
+        - project:
+            value_name: PROJECT
+            index: 1
+            required: true
+            help: "Directory or 'package.json' file for the project"
         - stash:
             short: s
             long: stash

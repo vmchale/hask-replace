@@ -21,7 +21,6 @@ use hreplace::cabal::parse_cabal;
 use hreplace::hask::parse_haskell;
 
 #[derive(Debug)]
-// TODO should encapsulate strings!
 struct ProjectOwned {
     pub copy: bool,
     pub dir: PathBuf,
@@ -72,7 +71,6 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
 
 fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) -> ProjectOwned {
 
-    // TODO make sure the parent stuff is working.
     let s = p.to_string_lossy().to_string();
     let parent = if s.ends_with(".cabal") || s.ends_with(".ipkg") || s.ends_with(".json") {
         p.parent().unwrap_or(p)
@@ -323,7 +321,7 @@ fn replace_all(
 
     let in_config_file = (&contents).contains(old_module);
 
-    if !in_config_file && config.config_extension != ".json" {
+    if !in_config_file && !config.config_extension.ends_with(".json") {
         eprintln!(
             "{}: module '{}' not found in your config file '{}'",
             "Warning".yellow(),
@@ -444,8 +442,27 @@ fn main() {
         .version(crate_version!())
         .setting(AppSettings::SubcommandRequired)
         .get_matches();
+    if let Some(x) = matches.subcommand_matches("update") {
 
-    if let Some(command) = matches.subcommand_matches("module") {
+        let force = x.is_present("force");
+
+        println!("current version: {}", crate_version!());
+
+        let s = if force {
+            "curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git vmchale/hask-replace --force"
+        } else {
+            "curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git vmchale/hask-replace"
+        };
+
+        let script = Command::new("bash").arg("-c").arg(s).output().expect(
+            "failed to execute update script.",
+        );
+
+        let script_string = String::from_utf8(script.stderr).unwrap();
+
+        println!("{}", script_string);
+
+    } else if let Some(command) = matches.subcommand_matches("module") {
 
         let dir_string = get_dir(command.value_of("project"));
 
@@ -534,6 +551,26 @@ fn main() {
         let extns = vec![".elm".to_string()];
 
         let config_project = get_config(&dir, &extns, ".json", command.is_present("copy"));
+
+        if command.is_present("stash") {
+            git_stash(&config_project.dir.to_string_lossy().to_string());
+        }
+
+        replace_all(&config_project, old_module, new_module, false);
+
+    } else if let Some(command) = matches.subcommand_matches("purescript") {
+
+        let dir_string = get_dir(command.value_of("project"));
+
+        let dir = PathBuf::from(dir_string);
+
+        let old_module = command.value_of("old").unwrap();
+
+        let new_module = command.value_of("new").unwrap();
+
+        let extns = vec![".purs".to_string()];
+
+        let config_project = get_config(&dir, &extns, "package.json", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());

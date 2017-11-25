@@ -59,14 +59,38 @@ named!(pre_inputs<&str, ()>,
     recognize!(opt!(multispace)) >>
     opt!(tag!("qualified ")) >>
     opt!(tag!("public ")) >>
-    recognize!(many0!(skip)) >>
+    many0!(skip) >>
     (())
   )
 );
 
-named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
+named!(pre_module_exports<&str, ()>,
+  do_parse!(
+    is_a!(" ,(") >>
+    tag!("module") >>
+    multispace >>
+    many0!(skip) >>
+    (())
+  )
+);
+
+named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     ts: recognize!(many0!(
+      alt!(
+        skip |
+        boring_line
+      )
+    )) >>
+    t2: many0!(
+      do_parse!(
+        a: recognize!(pre_module_exports) >>
+        d: is_not!(", \n)") >>
+        f: recognize!(do_parse!(take_until!("\n") >> tag!("\n") >> (()))) >>
+        (vec![a, swap_module(old, new, d), f])
+      )
+    ) >>
+    ts2: recognize!(many0!(
       alt!(
         skip |
         boring_line
@@ -80,7 +104,7 @@ named_args!(pub parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&
         (vec![a, swap_module(old, new, d), f])
       )
     ) >>
-    (join(vec![vec![ts], join(t)]))
+    (join(vec![vec![ts], join(t2), vec![ts2], join(t)]))
   )
 );
 
