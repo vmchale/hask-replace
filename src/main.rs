@@ -132,7 +132,10 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
 
     let _ = dir.filter_map(|e| e.ok())
         .filter(|x| {
-            x.file_type().is_dir() && read_dir(x.path()).into_iter().count() == 0
+            x.file_type().is_dir() &&
+                read_dir(x.path())
+                    .map(|inner| inner.into_iter().count())
+                    .unwrap_or(0) == 0
         })
         .for_each(|p| {
             let intermediate = remove_dir(p.path());
