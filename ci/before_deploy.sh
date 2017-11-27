@@ -17,7 +17,11 @@ main() {
 
     test -f Cargo.lock || cargo generate-lockfile
 
-    cross rustc --bin hr --target $TARGET --release -- -C lto
+    if [ "$TARGET" = "x86_64-unknown-redox" ]; then
+        cargo build --bin hr --target $TARGET --release
+    else
+        cross rustc --bin hr --target $TARGET --release -- -C lto
+    fi
 
     cp target/$TARGET/release/hr $stage/
 
