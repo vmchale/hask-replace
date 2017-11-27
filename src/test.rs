@@ -11,9 +11,8 @@ use utils::*;
 
 fn all<T>(input: IResult<&str, T, u32>) -> T {
     match input {
-        IResult::Done(_, x) => x,
-        IResult::Error(e) => panic!("{}", e),
-        IResult::Incomplete(x) => panic!("{:?}", x),
+        Ok((_, x)) => x,
+        Err(e) => panic!("{:?}", e),
     }
 }
 

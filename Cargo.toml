@@ -17,7 +17,7 @@ path = "src/main.rs"
 colored = "1.5.2"
 rayon = "0.8.2"
 walkdir = "1.0.7"
-nom = { git = "https://github.com/vmchale/nom", features = ["verbose-errors"] }
+nom = { git = "https://github.com/vmchale/nom", features = [ "default" ] }
 
 [dependencies.clap]
 features = ["yaml"]

@@ -321,6 +321,7 @@ fn replace_all(
 
     let in_config_file = (&contents).contains(old_module);
 
+    // TODO purescript thing doesn't actually get moved??
     if !in_config_file && !config.config_extension.ends_with(".json") {
         eprintln!(
             "{}: module '{}' not found in your config file '{}'",
@@ -570,7 +571,7 @@ fn main() {
 
         let extns = vec![".purs".to_string()];
 
-        let config_project = get_config(&dir, &extns, "package.json", command.is_present("copy"));
+        let config_project = get_config(&dir, &extns, ".json", command.is_present("copy"));
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());

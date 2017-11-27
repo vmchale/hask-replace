@@ -7,7 +7,7 @@ use self::colored::*;
 
 pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
     match input {
-        IResult::Done(_, x) => x,
+        Ok((_, x)) => x, // IResult::Done(_, x) => x,
         _ => {
             eprintln!(
                 "{}: Could not parse {} file at {}",
