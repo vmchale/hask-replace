@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 use std::process::exit;
 use colored::*;
-use std::fs::File;
+use std::fs::{File, remove_dir, read_dir};
 use std::io::prelude::*;
 use std::process::Command;
 use std::path::Path;
@@ -126,8 +126,28 @@ fn get_dir(paths_from_cli: Option<&str>) -> &str {
     }
 }
 
-// fn clean_empty_dirs
-// std::fs::remove_dir
+fn clean_empty_dirs(p: &PathBuf) -> () {
+    let s = p.to_string_lossy().to_string();
+    let dir = WalkDir::new(s).into_iter();
+
+    let _ = dir.filter_map(|e| e.ok())
+        .filter(|x| {
+            x.file_type().is_dir() && read_dir(x.path()).into_iter().count() == 0
+        })
+        .for_each(|p| {
+            let intermediate = remove_dir(p.path());
+            let _ = match intermediate {
+                Ok(y) => y,
+                Err(_) => {
+                    eprintln!(
+                        "{}: failed to clean up leftover directories.",
+                        "Warning".yellow()
+                    )
+                }
+            };
+        });
+
+}
 
 fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
 
@@ -419,6 +439,9 @@ fn replace_all(
         );
         exit(0x0001)
     }
+
+    // step 6: clean up any now-spurious directories
+    clean_empty_dirs(&config.dir);
 
 }
 
