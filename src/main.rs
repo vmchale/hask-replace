@@ -126,6 +126,9 @@ fn get_dir(paths_from_cli: Option<&str>) -> &str {
     }
 }
 
+// fn clean_empty_dirs
+// std::fs::remove_dir
+
 fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
 
     let s = p.to_string_lossy().to_string();

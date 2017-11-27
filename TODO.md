@@ -15,3 +15,4 @@
     - [ ] parse cabal file to find source directories.
   - [ ] move a directory structure
   - [ ] new module? Or new test suite perhaps?
+  - [ ] clean up newly-emptied directories
