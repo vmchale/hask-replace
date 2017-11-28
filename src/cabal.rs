@@ -57,6 +57,7 @@ named!(pub boring_line<&str, &str>,
         tag!("Exposed-Modules") |
         tag!("Other-Modules") |
         tag!("other-modules") |
+        tag!("packages") |
         tag!("extra-source-files") |
         tag!("\"exposed-modules\":") |
         tag!("\"depends\":") |
@@ -147,6 +148,7 @@ named!(prolegomena<&str, ()>,
       tag!("Exposed-Modules:") |
       tag!("Other-Modules:") |
       tag!("modules =") |
+      tag!("packages:") |
       tag!("\"exposed-modules\":") | // FIXME what if exposed-modules doesn't exist?
       tag!("\"depends\":") |
       tag!("\"dependencies\":")
@@ -162,9 +164,9 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
           a: recognize!(skip_stuff) >>
           b: opt!(call!(parse_source, old_src, new_src)) >>
           d: recognize!(prolegomena) >>
-          e: call!(parse_modules, old, new) >>
+          e: opt!(call!(parse_modules, old, new)) >> // hpack doesn't require an exposed-modules section
           c: recognize!(opt!(skip_stuff)) >>
-          (join(vec![vec![a], from_vec(b), vec![d], e, vec![c]]))
+          (join(vec![vec![a], from_vec(b), vec![d], from_vec(e), vec![c]]))
         )
     ) >>
     b: rest_s >>
@@ -176,8 +178,8 @@ named!(step_indented<&str, &str>,
   alt!(
     recognize!(do_parse!(a: tag!(",") >> b: multispace >> ())) |
     is_a!(" ") |
-    recognize!(do_parse!(a: opt!(tag!("\n")) >> b: eof!() >> ())) | // (vec![from_opt(a), b])) |
-    recognize!(do_parse!(c: opt!(tag!(",")) >> a: tag!("\n") >> b: multispace >> ())) // (vec![from_opt(c), a, b]))
+    recognize!(do_parse!(a: opt!(tag!("\n")) >> b: eof!() >> ())) |
+    recognize!(do_parse!(c: opt!(tag!(",")) >> a: tag!("\n") >> b: multispace >> ()))
   )
 );
 
@@ -186,12 +188,13 @@ named!(module_prolegomena<&str, ()>,
     opt!(skip_comment) >>
     step_indented >>
     opt!(tag!(", ")) >>
+    opt!(tag!("- ")) >> // FIXME
     (())
   )
 );
 
 named_args!(module_helper<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
-  do_parse!(a: recognize!(module_prolegomena) >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending ) >> (vec![a, swap_module(old, new, b), c]))
+  do_parse!(a: recognize!(module_prolegomena) >> b: is_not!("\r\n, ") >> c: alt!(tag!(",\n") | tag!(",") | line_ending) >> (vec![a, swap_module(old, new, b), c]))
 );
 
 named_args!(parse_modules<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,

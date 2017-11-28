@@ -21,7 +21,10 @@ bench:
 
 
 packages:
-    @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka
+    @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka futhark
+    @git clone https://github.com/diku-dk/futhark
+    cd futhark && cargo run -- m . Language.Futhark.Parser.Parser Language.Futhark.Parser.Mod --hpack && cargo run -- m . Language.Futhark.TH Language.Futhark.Sin && stack build
+    @rm -rf futhark
     @git clone https://github.com/slamdata/purescript-matryoshka.git
     cd purescript-matryoshka && cargo run -- p . Matryoshka.DistributiveLaw Matryoshka.DL && npm install && bower install && npm run -s build && npm run -s test
     @rm -rf purescript-matryoshka

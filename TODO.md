@@ -13,6 +13,12 @@
     - [x] support for alex/happy
     - [x] support for `.hsig` files
     - [ ] parse cabal file to find source directories.
+  - [ ] work within haddocks as well.
   - [ ] move a directory structure
   - [ ] new module? Or new test suite perhaps?
   - [ ] clean up newly-emptied directories
+# Code Maintenance
+  - [ ] test suite for backpack
+  - [ ] test suite with `.hs-boot` files
+  - [ ] test suite with `.x` and `.out` files, etc.
+  - [x] test suite with hpack

@@ -4,7 +4,7 @@
 [![Build Status](https://travis-ci.org/vmchale/hask-replace.svg?branch=master)](https://travis-ci.org/vmchale/hask-replace)
 
 `hask-replace` is a command-line tool for renaming
-Haskell, Elm, and Idris modules.
+Haskell, Elm, PureScript, and Idris modules.
 
 ## The Pitch
 
@@ -18,8 +18,7 @@ cabal new-build
 ```
 
 As you can see, it's a lot less painful than whatever witchcraft you'd have to
-resort to to accomplish the same thing in bash. Not only that, it works for Idris
-and Elm and it detects `happy`/`alex` modules too!
+resort to to accomplish the same thing in bash.
 
 ## The Anti-Pitch
 
@@ -54,7 +53,7 @@ First, install [cargo](https://rustup.rs/). Then:
 You will need to use the nightly release for this to work; if in doubt run
 
 ```bash
-rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
+ $ rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
 ```
 
 ## Performance
@@ -66,7 +65,7 @@ rustup run nightly cargo install --git https://github.com/vmchale/hask-replace
 
 ## Use
 
-`hr` can also be used on Idris projects.
+Example use:
 
 ```bash
 git clone https://github.com/HuwCampbell/idris-lens.git

@@ -195,7 +195,14 @@ fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
     new_vec
 }
 
-fn replace_file(p: &PathBuf, old_module: &str, new_module: &str, _: &[String], _: bool) -> () {
+fn replace_file(
+    p: &PathBuf,
+    old_module: &str,
+    new_module: &str,
+    source_contents: &str,
+    _: &[String],
+    _: bool,
+) -> () {
 
     let mut source_file = File::open(p).expect("174");
     let mut source = String::new();
@@ -203,7 +210,7 @@ fn replace_file(p: &PathBuf, old_module: &str, new_module: &str, _: &[String], _
 
     let replacements = parse_haskell(
         &source,
-        "Haskell",
+        source_contents,
         &p.to_string_lossy().to_string(),
         old_module,
         new_module,
@@ -218,6 +225,7 @@ fn rayon_directory_contents(
     old_module: &str,
     new_module: &str,
     extension: &[String],
+    source_contents: &str,
     _: bool,
 ) -> () {
 
@@ -230,7 +238,7 @@ fn rayon_directory_contents(
         source_file.read_to_string(&mut source).unwrap();
         let replacements = parse_haskell(
             &source,
-            "Haskell",
+            source_contents,
             &p.to_string_lossy().to_string(),
             old_module,
             new_module,
@@ -272,7 +280,7 @@ fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
     match file.read_to_string(&mut contents) {
         Ok(_) => (),
         _ => {
-            eprintln!("{}: Failed to read file at: {:?}", "Error".red(), contents);
+            eprintln!("{}: Failed to read file at: {:?}", "Error".red(), p);
             exit(0x0001)
         }
     }
@@ -309,6 +317,7 @@ fn replace_all(
     config: &ProjectOwned,
     old_module: &str,
     new_module: &str,
+    source_contents: &str,
     benchmark_mode: bool,
 ) -> () {
 
@@ -393,7 +402,14 @@ fn replace_all(
 
     // step 4: replace every 'import Module' with 'import NewModule'
     if !config.copy {
-        rayon_directory_contents(config, old_module, new_module, module_ext, false);
+        rayon_directory_contents(
+            config,
+            old_module,
+            new_module,
+            module_ext,
+            source_contents,
+            false,
+        );
     }
 
     // step 5: move the actual file
@@ -427,7 +443,14 @@ fn replace_all(
                 .unwrap(),
         );
 
-        replace_file(&file_name, old_module, new_module, module_ext, false);
+        replace_file(
+            &file_name,
+            old_module,
+            new_module,
+            source_contents,
+            module_ext,
+            false,
+        );
 
     }
 
@@ -505,7 +528,12 @@ fn main() {
         // TODO .hs-boot, .hsig files
         let extns = vec![".hs".to_string(), ".x".to_string(), ".y".to_string()];
 
-        let config_project = get_config(&dir, &extns, ".cabal", command.is_present("copy"));
+        let config_extn = if command.is_present("hpack") {
+            "package.yaml"
+        } else {
+            ".cabal"
+        };
+        let config_project = get_config(&dir, &extns, config_extn, command.is_present("copy"));
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());
@@ -513,7 +541,13 @@ fn main() {
 
         let benchmark = command.is_present("bench");
 
-        replace_all(&config_project, old_module, new_module, benchmark);
+        replace_all(
+            &config_project,
+            old_module,
+            new_module,
+            "Haskell",
+            benchmark,
+        );
 
         if command.is_present("spec") {
             let mut old_module_owned = old_module.to_string();
@@ -524,6 +558,7 @@ fn main() {
                 &config_project,
                 &old_module_owned,
                 &new_module_owned,
+                "Haskell",
                 benchmark,
             );
         }
@@ -546,7 +581,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_config, new_config, false);
+        replace_all(&config_project, old_config, new_config, "Cabal", false);
 
     } else if let Some(command) = matches.subcommand_matches("idris") {
 
@@ -566,7 +601,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_module, new_module, false);
+        replace_all(&config_project, old_module, new_module, "Idris", false);
 
     } else if let Some(command) = matches.subcommand_matches("elm") {
 
@@ -586,7 +621,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_module, new_module, false);
+        replace_all(&config_project, old_module, new_module, "Elm", false);
 
     } else if let Some(command) = matches.subcommand_matches("purescript") {
 
@@ -606,7 +641,7 @@ fn main() {
             git_stash(&config_project.dir.to_string_lossy().to_string());
         }
 
-        replace_all(&config_project, old_module, new_module, false);
+        replace_all(&config_project, old_module, new_module, "PureScript", false);
 
     } else {
         eprintln!("{}: failed to supply a subcommand", "Error".red());
