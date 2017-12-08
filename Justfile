@@ -19,11 +19,11 @@ bench:
     bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
     @rm -rf lens-4.15.4 haskell-src-exts-1.19.1
 
-
+#cd cabal && rm Cabal/tests/ParserTests/warnings/bom.cabal && cargo run -- r . Cabal Cable && cabal new-build all -w ghc-8.2.2
 packages:
     @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka futhark cabal
     @git clone https://github.com/haskell/cabal
-    cd cabal && cargo run -- m Cabal Distribution.Backpack Distribution.FannyPack && cabal new-build all -w ghc-8.2.2
+    cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all -w ghc-8.2.2
     @git clone https://github.com/diku-dk/futhark
     cd futhark && cargo run -- m . Language.Futhark.Parser.Parser Language.Futhark.Parser.Mod --hpack && cargo run -- m . Language.Futhark.TH Language.Futhark.Sin --hpack && stack build
     @rm -rf futhark

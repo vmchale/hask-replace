@@ -37,7 +37,6 @@ pub fn parse_haskell(
 // skip comment
 named!(skip<&str, &str>,
   recognize!(alt!(
-    // string_contents |
     skip_comment |
     block_comment
   ))
@@ -99,6 +98,7 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     )) >>
     t: many0!(
       do_parse!(
+        // a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
         a: recognize!(pre_inputs) >>
         d: is_not!("( \n") >>
         f: recognize!(do_parse!(take_until!("\n") >> is_a!("\n") >> (()))) >>
@@ -144,9 +144,15 @@ named!(pre_module_replace<&str, ()>,
 // replace module name
 named_args!(module_name<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
+    z: recognize!(many0!(
+      alt!(
+        skip |
+        boring_line
+      )
+    )) >>
     a: recognize!(pre_module_replace) >>
     e: is_not!(" \n(") >>
-    (vec![a, swap_module(old, new, e)])
+    (vec![z, a, swap_module(old, new, e)])
   )
 );
 
@@ -204,7 +210,7 @@ named!(linebreak_string<&str, &str>,
 named!(char_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("'") >>
-    many0!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    many0!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
     tag!("'") >>
     opt!(tag!("\n")) >>
     (())
@@ -237,13 +243,10 @@ named_args!(qualifier_substitution<'a>(old: &'a str, old_dot: &'a str, new: &'a 
 named_args!(pub parse_full<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(
     a: recognize!(many0!(
-      alt!(
-        skip |
-        boring_line
-      )
+      skip
     )) >>
-    b: opt!(call!(module_name, old, new)) >>
-    f: opt!(call!(parse_import_list, old, new)) >>
+    b: opt!(complete!(call!(module_name, old, new))) >>
+    f: opt!(complete!(call!(parse_import_list, old, new))) >>
     g: call!(qualifier_substitution, old, old_dot, new, new_dot, special) >>
     (join(vec![vec![a], from_vec(b), from_vec(f), g]))
   )

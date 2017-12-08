@@ -24,6 +24,7 @@ use hreplace::hask::parse_haskell;
 struct ProjectOwned {
     pub copy: bool,
     pub dir: PathBuf,
+    pub parent_dir: bool,
     pub config_file: PathBuf,
     pub module_extension: Vec<String>,
     pub config_extension: String,
@@ -80,21 +81,38 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
 
     let mut config_vec: Vec<String> = Vec::new();
     config_vec.push(config_ext.to_string());
-    let vec = find_by_end_vec(p, config_vec.as_slice(), Some(1));
+    let vec = find_by_end_vec(p, config_vec.as_slice(), Some(2)); // FIXME only here cuz we don't do depths of > 2 lol.
     let vec_len = vec.len();
 
     // if we find more than one config file, abort.
-    if vec_len > 1 && config_ext == ".config" {
+    if vec_len > 1 && config_ext == ".ipkg" {
         eprintln!(
             "{}: more than one '{}' file in indicated directory, aborting.",
             config_ext,
             "Error".red()
         );
         exit(0x0001)
+    } else if vec_len > 1 && config_ext == ".cabal" {
+        let config_name = vec.into_iter()
+            .filter(|p| p.to_string_lossy().ends_with("Cabal.cabal"))
+            .collect::<Vec<PathBuf>>()
+            .pop()
+            .unwrap();
+        ProjectOwned {
+            copy: copy,
+            dir: PathBuf::from(s),
+            parent_dir: true,
+            config_file: {
+                config_name
+            },
+            module_extension: module_ext.to_owned(),
+            config_extension: config_ext.to_string(),
+        }
     } else if vec_len == 0 {
         ProjectOwned {
             copy: copy,
             dir: parent.to_path_buf(),
+            parent_dir: false,
             config_file: p.clone(),
             module_extension: module_ext.to_owned(),
             config_extension: config_ext.to_string(),
@@ -108,6 +126,7 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
         ProjectOwned {
             copy: copy,
             dir: PathBuf::from(s),
+            parent_dir: false,
             config_file: {
                 config_name
             },
@@ -156,7 +175,11 @@ fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
 
     let s = p.to_string_lossy().to_string();
 
-    let dir = WalkDir::new(s).into_iter();
+    let dir = if s == "" {
+        WalkDir::new(".").into_iter()
+    } else {
+        WalkDir::new(s).into_iter()
+    };
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
@@ -229,7 +252,12 @@ fn rayon_directory_contents(
     _: bool,
 ) -> () {
 
-    let dir: Vec<PathBuf> = get_source_files(&config.dir, extension);
+    let dir: Vec<PathBuf> = if !config.parent_dir {
+        get_source_files(&config.dir, extension)
+    } else {
+        let p = &config.dir;
+        get_source_files(&p.parent().unwrap_or(p).to_path_buf(), extension)
+    };
     let iter = dir.into_par_iter();
 
     iter.for_each(|p| {
@@ -525,7 +553,7 @@ fn main() {
 
         let new_module = command.value_of("new").unwrap();
 
-        // TODO .hs-boot, .hsig files
+        // TODO .hs-boot, .hsig files (?)
         let extns = vec![".hs".to_string(), ".x".to_string(), ".y".to_string()];
 
         let config_extn = if command.is_present("hpack") {
@@ -573,9 +601,9 @@ fn main() {
 
         let new_config = command.value_of("new").unwrap();
 
-        let extns = vec![".cabal".to_string(), ".yaml".to_string()];
+        let extns = vec![".cabal".to_string()];
 
-        let config_project = get_config(&dir, &extns, ".cabal", false);
+        let config_project = get_config(&dir, &extns, ".project", false); // TODO .local too?
 
         if command.is_present("stash") {
             git_stash(&config_project.dir.to_string_lossy().to_string());
