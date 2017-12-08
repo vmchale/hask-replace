@@ -8,7 +8,7 @@ use self::colored::*;
 pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
     match input {
         Ok((_, x)) => x, // IResult::Done(_, x) => x,
-        _ => {
+        Err(_) => {
             eprintln!(
                 "{}: Could not parse {} file at {}",
                 "Error".red(),
@@ -164,7 +164,7 @@ named_args!(pub parse_all<'a>(old: &'a str, new: &'a str, old_src: &'a str, new_
           a: recognize!(skip_stuff) >>
           b: opt!(call!(parse_source, old_src, new_src)) >>
           d: recognize!(prolegomena) >>
-          e: opt!(call!(parse_modules, old, new)) >> // hpack doesn't require an exposed-modules section
+          e: opt!(call!(parse_modules, old, new)) >> // hpack doesn't require an exposed-modules section lol ??
           c: recognize!(opt!(skip_stuff)) >>
           (join(vec![vec![a], from_vec(b), vec![d], from_vec(e), vec![c]]))
         )
@@ -188,7 +188,7 @@ named!(module_prolegomena<&str, ()>,
     opt!(skip_comment) >>
     step_indented >>
     opt!(tag!(", ")) >>
-    opt!(tag!("- ")) >> // FIXME
+    opt!(tag!("- ")) >> // FIXME edit this.
     (())
   )
 );

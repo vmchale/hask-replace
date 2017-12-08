@@ -13,18 +13,16 @@ use std::fs::File;
 use std::io::prelude::*;
 
 #[bench]
-fn bench_hask(b: &mut Bencher) {
-    let string = hask();
-    b.iter(|| {
-        parse_full(&string, "Mod", "Mod.", "NewMod", "NewMod.", "M-{")
-    })
-}
-
-#[bench]
 fn bench_cabal(b: &mut Bencher) {
     let string = cabal();
     b.iter(|| {
-        parse_all(&string, "Mod", "NewMod", "stack.yaml", "bad.yaml")
+        concat_str(all(parse_all(
+            &string,
+            "Mod",
+            "NewMod",
+            "stack.yaml",
+            "bad.yaml",
+        )))
     })
 }
 #[bench]

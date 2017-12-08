@@ -1,7 +1,7 @@
 // use nom::multispace;
 use cabal::*;
 use utils::*;
-use nom::space;
+use nom::{space, hex_digit};
 
 // opinionated find-and-replace
 // we know already that monadic parser combinators work well.
@@ -17,7 +17,7 @@ pub fn parse_haskell(
 ) -> String {
 
     // this is less stupid than it looks because nom parses by byte.
-    let special = ("-{".to_string() + &old[0..1]).to_string();
+    let special = ("-{\"".to_string() + &old[0..1]).to_string();
 
     concat_str(handle_errors(
         parse_full(
@@ -37,6 +37,7 @@ pub fn parse_haskell(
 // skip comment
 named!(skip<&str, &str>,
   recognize!(alt!(
+    // string_contents |
     skip_comment |
     block_comment
   ))
@@ -154,16 +155,12 @@ named!(fancy_stuff<&str, &str>,
     alt!(
       do_parse!(
         tag!("-") >> 
-        is_not!(" -") >>
+        is_not!("-") >>
         (())
       ) |
       do_parse!(
         tag!("{") >> 
         is_not!("-") >>
-        (())
-      ) |
-      do_parse!(
-        tag!("- ") >>
         (())
       )
     )
@@ -173,13 +170,55 @@ named!(fancy_stuff<&str, &str>,
 // parse a line, substituting when necessary.
 named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
-    alt!(
+    alt_complete!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
       is_not!(special) |
-      is_not!(" \n-{") |
+      is_not!(" \n-{\"'") |
+      string_contents |
+      char_contents |
+      is_not!(" \n-{\"") |
+      skip |
       fancy_stuff
     )
   )
+);
+
+named!(take_unicode<&str, &str>,
+  recognize!(do_parse!(
+    tag!("\\") >>
+    opt!(tag!("x")) >> // FIXME make it only do hex when 
+    hex_digit >>
+    (())
+  ))
+);
+
+named!(linebreak_string<&str, &str>,
+  recognize!(do_parse!(
+    tag!("\\\n") >>
+    multispace >>
+    tag!("\\") >>
+    (())
+  ))
+);
+
+named!(char_contents<&str, &str>,
+  recognize!(do_parse!(
+    tag!("'") >>
+    many0!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    tag!("'") >>
+    opt!(tag!("\n")) >>
+    (())
+  ))
+);
+
+named!(string_contents<&str, &str>,
+  recognize!(do_parse!(
+    tag!("\"") >>
+    many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    tag!("\"") >>
+    opt!(tag!("\n")) >>
+    (())
+  ))
 );
 
 // parse a line or skip commented line

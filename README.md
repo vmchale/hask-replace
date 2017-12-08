@@ -60,8 +60,8 @@ You will need to use the nightly release for this to work; if in doubt run
 
 | Package | Task | Time |
 | ------- | ---- | ---- |
-| lens | Rename Module | 6.205 ms |
-| dhall | Rename Module | 10.65 ms |
+| dhall | Rename Module | 7.185 ms |
+| lens | Rename Module | 9.671 ms |
 
 ## Use
 

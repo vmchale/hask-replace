@@ -7,18 +7,19 @@
     - [ ] nice diff output like vim-hare
     - [ ] should optionally move spec files as well
 # Features
-  - [ ] support for backpack (?)
+  - [ ] insert a module
+  - [ ] support for backpack
   - [ ] run on .hlint.yaml file as well.
     - [x] support for `.hs-boot` files
     - [x] support for alex/happy
     - [x] support for `.hsig` files
     - [ ] parse cabal file to find source directories.
-  - [ ] work within haddocks as well.
+  - [ ] work within haddocks as well
   - [ ] move a directory structure
   - [ ] new module? Or new test suite perhaps?
   - [ ] clean up newly-emptied directories
 # Code Maintenance
+  - [ ] data structure for refactors
   - [ ] test suite for backpack
   - [ ] test suite with `.hs-boot` files
   - [ ] test suite with `.x` and `.out` files, etc.
-  - [x] test suite with hpack
