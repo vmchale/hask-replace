@@ -8,12 +8,13 @@ use self::colored::*;
 pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
     match input {
         Ok((_, x)) => x, // IResult::Done(_, x) => x,
-        Err(_) => {
+        Err(e) => {
             eprintln!(
-                "{}: Could not parse {} file at {}",
+                "{}: Could not parse {} file at {}\n{:?}",
                 "Error".red(),
                 file_type,
                 file_name,
+                e,
             );
             exit(0x001)
         } // FIXME 

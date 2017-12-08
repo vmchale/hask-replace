@@ -220,7 +220,7 @@ named!(char_contents<&str, &str>,
 named!(string_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("\"") >>
-    many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\b") | tag!("\\f") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
     tag!("\"") >>
     opt!(tag!("\n")) >>
     (())
