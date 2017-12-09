@@ -1,7 +1,7 @@
 // use nom::multispace;
 use cabal::*;
 use utils::*;
-use nom::{space, hex_digit};
+use nom::{space, hex_digit, alphanumeric};
 
 // opinionated find-and-replace
 // we know already that monadic parser combinators work well.
@@ -17,7 +17,7 @@ pub fn parse_haskell(
 ) -> String {
 
     // this is less stupid than it looks because nom parses by byte.
-    let special = ("-{\"".to_string() + &old[0..1]).to_string();
+    let special = ("-{\"'".to_string() + &old[0..1]).to_string();
 
     concat_str(handle_errors(
         parse_full(
@@ -98,11 +98,11 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     )) >>
     t: many0!(
       do_parse!(
-        // a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
+        a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
         a: recognize!(pre_inputs) >>
         d: is_not!("( \n") >>
         f: recognize!(do_parse!(take_until!("\n") >> is_a!("\n") >> (()))) >>
-        (vec![a, swap_module(old, new, d), f])
+        ({println!("{}", f) ; vec![a, swap_module(old, new, d), f]})
       )
     ) >>
     (join(vec![vec![ts], join(t2), vec![ts2], join(t)]))
@@ -176,13 +176,13 @@ named!(fancy_stuff<&str, &str>,
 // parse a line, substituting when necessary.
 named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
-    alt_complete!(
+    alt!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      is_not!(special) |
-      is_not!(" \n-{\"'") |
-      string_contents |
-      char_contents |
-      is_not!(" \n-{\"") |
+      recognize!(not!(alt!(is_a!(special) | alphanumeric))) |
+      recognize!(not!(alt!(is_a!(" \n-{\"'") | alphanumeric))) |
+      recognize!(do_parse!(alphanumeric >> opt!(tag!("'")) >> (()))) |
+      complete!(char_contents) |
+      complete!(string_contents) |
       skip |
       fancy_stuff
     )
@@ -210,7 +210,7 @@ named!(linebreak_string<&str, &str>,
 named!(char_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("'") >>
-    many0!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    b: many1!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
     tag!("'") >>
     opt!(tag!("\n")) >>
     (())
@@ -220,10 +220,10 @@ named!(char_contents<&str, &str>,
 named!(string_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("\"") >>
-    many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\b") | tag!("\\f") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    x: many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\b") | tag!("\\f") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
     tag!("\"") >>
     opt!(tag!("\n")) >>
-    (())
+    (x)
   ))
 );
 
