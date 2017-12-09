@@ -178,9 +178,9 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
   many0!(
     alt_complete!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      recognize!(do_parse!(is_not!(" \n-{\"") >> multispace >> alphanumeric >> tag!("'") >> (()))) |
       is_not!(special) |
       is_not!(" \n-{\"'") |
+      recognize!(do_parse!(alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("''") | tag!("')")) >> is_not!("'{") >> (()))) |
       char_contents |
       string_contents |
       skip |
