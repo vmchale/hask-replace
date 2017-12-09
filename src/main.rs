@@ -85,7 +85,7 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
     let vec_len = vec.len();
 
     // if we find more than one config file, abort.
-    if vec_len > 1 && config_ext == ".ipkg" {
+    if vec_len > 1 && config_ext == ".config" {
         eprintln!(
             "{}: more than one '{}' file in indicated directory, aborting.",
             config_ext,

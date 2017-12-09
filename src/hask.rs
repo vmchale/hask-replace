@@ -176,13 +176,13 @@ named!(fancy_stuff<&str, &str>,
 // parse a line, substituting when necessary.
 named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, new_dot: &'a str, special: &'a str)<&'a str, Vec<&'a str>>,
   many0!(
-    alt!(
+    alt_complete!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      recognize!(do_parse!(alphanumeric >> tag!("'") >> (()))) |
+      recognize!(do_parse!(is_not!(" \n-{\"") >> multispace >> alphanumeric >> tag!("'") >> (()))) |
       is_not!(special) |
       is_not!(" \n-{\"'") |
-      complete!(char_contents) |
-      complete!(string_contents) |
+      char_contents |
+      string_contents |
       skip |
       fancy_stuff
     )
