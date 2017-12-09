@@ -1,7 +1,7 @@
 // use nom::multispace;
 use cabal::*;
 use utils::*;
-use nom::{space, hex_digit, alphanumeric};
+use nom::{space, hex_digit};
 
 // opinionated find-and-replace
 // we know already that monadic parser combinators work well.
@@ -178,12 +178,12 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
   many0!(
     alt_complete!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
+      skip |
       is_not!(special) |
       is_not!(" \n-{\"'") |
-      recognize!(do_parse!(alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("''") | tag!("'''") | tag!("')") | tag!("',")) >> is_not!("'{\"") >> (()))) |
+      recognize!(complete!(do_parse!(alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("''") | tag!("'''") | tag!("')") | tag!("',")) >> (())))) |
       char_contents |
       string_contents |
-      skip |
       fancy_stuff
     )
   )
