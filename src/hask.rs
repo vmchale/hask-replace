@@ -180,7 +180,7 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
       is_not!(special) |
       is_not!(" \n-{\"'") |
-      recognize!(do_parse!(alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("''") | tag!("')")) >> is_not!("'{") >> (()))) |
+      recognize!(do_parse!(alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("''") | tag!("')") | tag!("',")) >> is_not!("'{") >> (()))) |
       char_contents |
       string_contents |
       skip |
@@ -210,7 +210,7 @@ named!(linebreak_string<&str, &str>,
 named!(char_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("'") >>
-    b: many1!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    b: many1!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\NUL") | tag!("\\n"))) >>
     tag!("'") >>
     opt!(tag!("\n")) >>
     (())
@@ -220,7 +220,7 @@ named!(char_contents<&str, &str>,
 named!(string_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("\"") >>
-    x: many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\b") | tag!("\\f") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\n"))) >>
+    x: many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\b") | tag!("\\f") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\NUL") | tag!("\\n"))) >>
     tag!("\"") >>
     opt!(tag!("\n")) >>
     (x)
