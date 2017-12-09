@@ -78,8 +78,8 @@ named!(parens<&str, ()>,
   do_parse!(
     tag!("(") >>
     alt!(
-      do_parse!(is_not!("()") >> (())) |
-      parens
+      parens |
+      do_parse!(opt!(is_not!("()")) >> (()))
     ) >>
     tag!(")") >>
     (())
@@ -98,9 +98,10 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     t2: many0!(
       do_parse!(
         a: recognize!(pre_module_exports) >>
+        b: recognize!(opt!(skip)) >>
         d: is_not!(", \n)") >>
-        f: recognize!(do_parse!(take_until!("\n") >> tag!("\n") >> (()))) >>
-        (vec![a, swap_module(old, new, d), f])
+        f: recognize!(do_parse!(take_until!("\n") >> many1!(tag!("\n")) >> (()))) >>
+        (vec![a, b, swap_module(old, new, d), f])
       )
     ) >>
     ts2: recognize!(many0!(
@@ -111,13 +112,14 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     )) >>
     t: many0!(
       do_parse!(
-        a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
+        a: alt!(recognize!(pre_inputs) | skip | recognize!(many1!(tag!("\n")))) >>
         d: is_not!("( \n") >>
-        f: recognize!(alt_complete!(
-          do_parse!(many1!(tag!(" ")) >> parens >> (())) |
-          do_parse!(take_until!("\n") >> is_a!("\n") >> (()))
+        f: recognize!(do_parse!(
+          do_parse!(take_until!("\n") >> is_a!("\n") >> (())) >>
+          opt!(do_parse!(many1!(tag!(" ")) >> opt!(tag!("hiding")) >> parens >> (()))) >>
+          (())
         )) >>
-        (vec![a, swap_module(old, new, d), f])
+        ( vec![a, swap_module(old, new, d), f])
       )
     ) >>
     (join(vec![vec![ts], join(t2), vec![ts2], join(t)]))
@@ -225,7 +227,8 @@ named!(linebreak_string<&str, &str>,
 named!(char_contents<&str, &str>,
   recognize!(do_parse!(
     tag!("'") >>
-    b: many1!(alt!(is_not!("\\'") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\NUL") | tag!("\\^M") | tag!("\\n"))) >>
+    // TODO - in alex, ['] is perfectly ok
+    b: many1!(alt!(is_not!("\\'") | tag!("\\") | tag!("'\\") | tag!("\\\\") | tag!("\\b") | tag!("\\f") | tag!("\\r") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\NUL") | tag!("\\^M") | tag!("\\n"))) >>
     tag!("'") >>
     opt!(tag!("\n")) >>
     (())
