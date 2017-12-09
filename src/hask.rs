@@ -100,7 +100,10 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
       do_parse!(
         a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
         d: is_not!("( \n") >>
-        f: recognize!(do_parse!(take_until!("\n") >> is_a!("\n") >> (()))) >>
+        f: recognize!(alt!(
+          do_parse!(tag!(" (") >> take_until!(")") >> tag!(")") >> (())) |
+          do_parse!(take_until!("\n") >> is_a!("\n") >> (()))
+        )) >>
         (vec![a, swap_module(old, new, d), f])
       )
     ) >>
