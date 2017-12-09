@@ -98,11 +98,11 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     )) >>
     t: many0!(
       do_parse!(
-        a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
+        // a: alt!(recognize!(pre_inputs) | skip | tag!("\n")) >>
         a: recognize!(pre_inputs) >>
         d: is_not!("( \n") >>
         f: recognize!(do_parse!(take_until!("\n") >> is_a!("\n") >> (()))) >>
-        ({println!("{}", f) ; vec![a, swap_module(old, new, d), f]})
+        (vec![a, swap_module(old, new, d), f])
       )
     ) >>
     (join(vec![vec![ts], join(t2), vec![ts2], join(t)]))
@@ -178,9 +178,9 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
   many0!(
     alt!(
       do_parse!(a: tag!(old_dot) >> (swap_module(old_dot, new_dot, a))) |
-      recognize!(not!(alt!(is_a!(special) | alphanumeric))) |
-      recognize!(not!(alt!(is_a!(" \n-{\"'") | alphanumeric))) |
-      recognize!(do_parse!(alphanumeric >> opt!(tag!("'")) >> (()))) |
+      recognize!(do_parse!(alphanumeric >> tag!("'") >> (()))) |
+      is_not!(special) |
+      is_not!(" \n-{\"'") |
       complete!(char_contents) |
       complete!(string_contents) |
       skip |
