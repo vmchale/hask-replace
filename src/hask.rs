@@ -180,7 +180,7 @@ named_args!(interesting_line<'a>(old: &'a str, old_dot: &'a str, new: &'a str, n
       skip |
       is_not!(special) |
       is_not!(" \n-{\"'") |
-      alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("'' ") | tag!("''' ") | tag!("')") | tag!("',")) |
+      alt!(tag!("' ") | tag!("'\n") | tag!("']") | tag!("'t") | tag!("''") | tag!("'''") | tag!("')") | tag!("',")) | // TODO names of functions w/ TH 'example
       char_contents |
       string_contents |
       fancy_stuff
