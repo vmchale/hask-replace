@@ -385,7 +385,9 @@ fn replace_all(
     let in_config_file = (&contents).contains(old_module);
 
     // TODO purescript thing doesn't actually get moved??
-    if !in_config_file && !config.config_extension.ends_with(".json") {
+    if !in_config_file && !config.config_extension.ends_with(".json") &&
+        !config.config_extension.ends_with(".yaml")
+    {
         eprintln!(
             "{}: module '{}' not found in your config file '{}'",
             "Warning".yellow(),

@@ -21,15 +21,16 @@ bench:
 
 #cd cabal && rm Cabal/tests/ParserTests/warnings/bom.cabal && cargo run -- r . Cabal Cable && cabal new-build all -w ghc-8.2.2
 #cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all -w ghc-8.2.2
+
 packages:
-    @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka futhark cabal
+    @rm -rf purescript-matryoshka
+    @git clone https://github.com/slamdata/purescript-matryoshka.git
+    cd purescript-matryoshka && cargo run -- p . Matryoshka.DistributiveLaw Matryoshka.DL && npm install && bower install && npm run -s build && npm run -s test
     @git clone https://github.com/haskell/cabal
+    @rm -rf cabal
     @git clone https://github.com/diku-dk/futhark
     cd futhark && cargo run -- m . Language.Futhark.Parser.Parser Language.Futhark.Parser.Mod --hpack && cargo run -- m . Language.Futhark.TH Language.Futhark.Sin --hpack && stack build
     @rm -rf futhark
-    @git clone https://github.com/slamdata/purescript-matryoshka.git
-    cd purescript-matryoshka && cargo run -- p . Matryoshka.DistributiveLaw Matryoshka.DL && npm install && bower install && npm run -s build && npm run -s test
-    @rm -rf purescript-matryoshka
     @git clone https://github.com/HuwCampbell/idris-lens.git
     cd idris-lens && cargo run -- idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
     @rm -rf idris-lens
@@ -45,6 +46,7 @@ packages:
     @git clone https://github.com/debois/elm-mdl
     cd elm-mdl && cargo run -- elm . Material.Options.Internal Material.Options.Mod && elm-make --yes
     @rm -rf elm-mdl/
+    @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka futhark cabal
 
 test:
     @rm -rf nothing

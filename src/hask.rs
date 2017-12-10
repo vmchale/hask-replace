@@ -68,7 +68,7 @@ named!(pre_module_exports<&str, ()>,
   do_parse!(
     is_a!(" ,(") >>
     tag!("module") >>
-    multispace >>
+    opt!(multispace) >>
     many0!(skip) >>
     (())
   )
@@ -100,8 +100,9 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
         a: recognize!(pre_module_exports) >>
         b: recognize!(opt!(skip)) >>
         d: is_not!(", \n)") >>
-        f: recognize!(do_parse!(take_until!("\n") >> many1!(tag!("\n")) >> (()))) >>
-        (vec![a, b, swap_module(old, new, d), f])
+        f: recognize!(do_parse!(take_until!("\n") >> tag!("\n") >> (()))) >>
+        g: recognize!(opt!(tag!(","))) >>
+        (vec![a, b, swap_module(old, new, d), f, g])
       )
     ) >>
     ts2: recognize!(many0!(
@@ -112,14 +113,14 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     )) >>
     t: many0!(
       do_parse!(
-        a: alt!(recognize!(pre_inputs) | skip | recognize!(many1!(tag!("\n")))) >>
+        a: recognize!(pre_inputs) >> // alt!(recognize!(pre_inputs) | skip | recognize!(many1!(tag!("\n")))) >>
         d: is_not!("( \n") >>
         f: recognize!(do_parse!(
           do_parse!(take_until!("\n") >> is_a!("\n") >> (())) >>
-          opt!(do_parse!(many1!(tag!(" ")) >> opt!(tag!("hiding")) >> parens >> (()))) >>
+          opt!(complete!(do_parse!(many1!(tag!(" ")) >> opt!(tag!("hiding")) >> parens >> (())))) >>
           (())
         )) >>
-        ( vec![a, swap_module(old, new, d), f])
+        (vec![a, swap_module(old, new, d), f])
       )
     ) >>
     (join(vec![vec![ts], join(t2), vec![ts2], join(t)]))
