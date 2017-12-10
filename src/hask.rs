@@ -113,7 +113,7 @@ named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a s
     )) >>
     t: many0!(
       do_parse!(
-        a: recognize!(pre_inputs) >> // alt!(recognize!(pre_inputs) | skip | recognize!(many1!(tag!("\n")))) >>
+        a: alt!(recognize!(pre_inputs) | skip | recognize!(many1!(tag!("\n")))) >>
         d: is_not!("( \n") >>
         f: recognize!(do_parse!(
           do_parse!(take_until!("\n") >> is_a!("\n") >> (())) >>
@@ -238,9 +238,9 @@ named!(char_contents<&str, &str>,
 
 named!(string_contents<&str, &str>,
   recognize!(do_parse!(
-    tag!("\"") >>
+    alt!(tag!("\"") | tag!("'")) >>
     x: many0!(alt!(is_not!("\"\\") | tag!("\\\"") | tag!("\\\\") | linebreak_string | tag!("\\r") | tag!("\\b") | tag!("\\f") | tag!("\\t") | take_unicode | tag!("\\DEL") | tag!("\\NUL") | tag!("\\^M") | tag!("\\n"))) >>
-    tag!("\"") >>
+    alt!(tag!("\"") | tag!("'")) >>
     opt!(tag!("\n")) >>
     (x)
   ))
