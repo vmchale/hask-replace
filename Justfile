@@ -19,13 +19,11 @@ bench:
     bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
     @rm -rf lens-4.15.4 haskell-src-exts-1.19.1
 
-#cd cabal && rm Cabal/tests/ParserTests/warnings/bom.cabal && cargo run -- r . Cabal Cable && cabal new-build all -w ghc-8.2.2
-
+#@git clone https://github.com/haskell/cabal && cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all -w ghc-8.2.2
 packages:
     @rm -rf purescript-matryoshka
     @git clone https://github.com/slamdata/purescript-matryoshka.git
     cd purescript-matryoshka && cargo run -- p . Matryoshka.DistributiveLaw Matryoshka.DL && npm install && bower install && npm run -s build && npm run -s test
-    @git clone https://github.com/haskell/cabal && cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all -w ghc-8.2.2
     @rm -rf cabal
     @git clone https://github.com/diku-dk/futhark
     cd futhark && cargo run -- m . Language.Futhark.Parser.Parser Language.Futhark.Parser.Mod --hpack && cargo run -- m . Language.Futhark.TH Language.Futhark.Sin --hpack && stack build
@@ -37,8 +35,8 @@ packages:
     cargo run -- module language-lua-0.10.0 Language.Lua.Annotated.Parser Language.Lua.Annotate.ParserAgain && cd language-lua-0.10.0 && cabal new-build -w ghc-8.2.2
     @rm -rf language-lua-0.10.0
     @cabal unpack dhall
-    cargo run -- module dhall-1.8.1 "Dhall.Import" "Dhall.Dependencies" && cd dhall-1.8.1 && cabal new-build -w ghc-8.2.2
-    @rm -rf dhall-1.8.1
+    cargo run -- module dhall-1.8.2 "Dhall.Import" "Dhall.Dependencies" && cd dhall-1.8.2 && cabal new-build -w ghc-8.2.2
+    @rm -rf dhall-1.8.2
     @cabal unpack lens
     cd lens-4.15.4 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build -w ghc-8.2.2
     @rm -rf lens-4.15.4
