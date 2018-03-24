@@ -10,16 +10,16 @@ check:
     git diff master origin/master
 
 bench:
-    @rm -rf dhall-1.8.1
+    @rm -rf dhall-1.9.1
     @cabal unpack dhall
     @cargo build --release
-    bench "./target/release/hr module dhall-1.8.1 'Dhall.Import' 'Dhall.Import' --benchmark-mode"
-    @rm -rf dhall-1.8.1 lens-4.15.4
+    bench "./target/release/hr module dhall-1.9.1 'Dhall.Import' 'Dhall.Import' --benchmark-mode"
+    @rm -rf dhall-1.9.1 lens-4.16
     @cabal unpack lens
-    bench "./target/release/hr module lens-4.15.4 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
-    @rm -rf lens-4.15.4 haskell-src-exts-1.19.1
+    bench "./target/release/hr module lens-4.16 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
+    @rm -rf lens-4.16 haskell-src-exts-1.19.1
 
-#@git clone https://github.com/haskell/cabal && cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all -w ghc-8.2.2
+#@git clone https://github.com/haskell/cabal && cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all
 packages:
     @rm -rf purescript-matryoshka
     @git clone https://github.com/slamdata/purescript-matryoshka.git
@@ -38,8 +38,8 @@ packages:
     cargo run -- module dhall-1.8.2 "Dhall.Import" "Dhall.Dependencies" && cd dhall-1.8.2 && cabal new-build -w ghc-8.2.2
     @rm -rf dhall-1.8.2
     @cabal unpack lens
-    cd lens-4.15.4 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build -w ghc-8.2.2
-    @rm -rf lens-4.15.4
+    cd lens-4.16 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build -w ghc-8.2.2
+    @rm -rf lens-4.16
     @git clone https://github.com/debois/elm-mdl
     cd elm-mdl && cargo run -- elm . Material.Options.Internal Material.Options.Mod && elm-make --yes
     @rm -rf elm-mdl/
@@ -56,6 +56,7 @@ test:
     cd test-nothing && cabal new-test -w ghc-8.2.2
     @rm -rf test-nothing nothing
     @pi new idris nothing
+    cd ~/programming/idris/depends/Idris-Bifunctors/ && idris --install bifunctors.ipkg
     cargo run -- idris nothing "Nothing.Lib" "NewLib.Nested"
     cd nothing && idris --build nothing.ipkg
     @rm -rf nothing

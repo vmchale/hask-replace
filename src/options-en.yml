@@ -30,6 +30,11 @@ subcommands:
             index: 3
             required: true
             help: New package name
+        - filter:
+            value_name: CABAL_FILE
+            short: c
+            long: cabal-file
+            help: Cabal file (if many are present)
         - stash:
             short: s
             long: stash

@@ -1,9 +1,9 @@
 #[macro_use]
 extern crate clap;
-extern crate rayon;
 extern crate colored;
-extern crate walkdir;
 extern crate hreplace;
+extern crate rayon;
+extern crate walkdir;
 
 use std::fs;
 use rayon::prelude::*;
@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use walkdir::WalkDir;
 use std::process::exit;
 use colored::*;
-use std::fs::{File, remove_dir, read_dir};
+use std::fs::{read_dir, remove_dir, File};
 use std::io::prelude::*;
 use std::process::Command;
 use std::path::Path;
@@ -39,9 +39,7 @@ impl ProjectOwned {
     }
 }
 
-
 fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<PathBuf> {
-
     let s = p.to_string_lossy().to_string();
 
     let dir = if let Some(d) = depth {
@@ -51,17 +49,14 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
     };
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.to_string_lossy().to_string().contains(".stack-work")) &&
-            (!path.to_string_lossy().to_string().contains("dist")) &&
-            {
-                let p_str = path.to_string_lossy().to_string();
-                (find.into_iter().fold(
-                    false,
-                    |bool_accumulator, string_ext| {
-                        bool_accumulator || p_str.ends_with(string_ext)
-                    },
-                ))
-            }
+        (!path.to_string_lossy().to_string().contains(".stack-work"))
+            && (!path.to_string_lossy().to_string().contains("dist")) && {
+            let p_str = path.to_string_lossy().to_string();
+            (find.into_iter()
+                .fold(false, |bool_accumulator, string_ext| {
+                    bool_accumulator || p_str.ends_with(string_ext)
+                }))
+        }
     });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
@@ -69,9 +64,7 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
     vec
 }
 
-
 fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) -> ProjectOwned {
-
     let s = p.to_string_lossy().to_string();
     let parent = if s.ends_with(".cabal") || s.ends_with(".ipkg") || s.ends_with(".json") {
         p.parent().unwrap_or(p)
@@ -102,9 +95,7 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
             copy: copy,
             dir: PathBuf::from(s),
             parent_dir: true,
-            config_file: {
-                config_name
-            },
+            config_file: { config_name },
             module_extension: module_ext.to_owned(),
             config_extension: config_ext.to_string(),
         }
@@ -127,14 +118,11 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
             copy: copy,
             dir: PathBuf::from(s),
             parent_dir: false,
-            config_file: {
-                config_name
-            },
+            config_file: { config_name },
             module_extension: module_ext.to_owned(),
             config_extension: config_ext.to_string(),
         }
     }
-
 }
 
 fn get_dir(paths_from_cli: Option<&str>) -> &str {
@@ -151,8 +139,8 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
 
     let _ = dir.filter_map(|e| e.ok())
         .filter(|x| {
-            x.file_type().is_dir() &&
-                read_dir(x.path())
+            x.file_type().is_dir()
+                && read_dir(x.path())
                     .map(|inner| inner.into_iter().count())
                     .unwrap_or(0) == 0
         })
@@ -160,19 +148,15 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
             let intermediate = remove_dir(p.path());
             let _ = match intermediate {
                 Ok(y) => y,
-                Err(_) => {
-                    eprintln!(
-                        "{}: failed to clean up leftover directories.",
-                        "Warning".yellow()
-                    )
-                }
+                Err(_) => eprintln!(
+                    "{}: failed to clean up leftover directories.",
+                    "Warning".yellow()
+                ),
             };
         });
-
 }
 
 fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
-
     let s = p.to_string_lossy().to_string();
 
     let dir = if s == "" {
@@ -183,21 +167,18 @@ fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
 
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
-        (!path.to_string_lossy().to_string().contains(".stack-work")) &&
-            (!path.to_string_lossy().to_string().contains("dist")) &&
-            {
-                let p_str = p.file_name().to_string_lossy().to_string();
-                extension.into_iter().fold(
-                    false,
-                    |bool_accumulator, string_ext| {
-                        bool_accumulator || p_str.ends_with(string_ext)
-                    },
-                )
-            }
+        (!path.to_string_lossy().to_string().contains(".stack-work"))
+            && (!path.to_string_lossy().to_string().contains("dist")) && {
+            let p_str = p.file_name().to_string_lossy().to_string();
+            extension
+                .into_iter()
+                .fold(false, |bool_accumulator, string_ext| {
+                    bool_accumulator || p_str.ends_with(string_ext)
+                })
+        }
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
-
 }
 
 fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
@@ -226,7 +207,6 @@ fn replace_file(
     _: &[String],
     _: bool,
 ) -> () {
-
     let mut source_file = File::open(p).expect("174");
     let mut source = String::new();
     source_file.read_to_string(&mut source).expect("176");
@@ -240,7 +220,6 @@ fn replace_file(
     );
 
     write_file(p, &replacements);
-
 }
 
 fn rayon_directory_contents(
@@ -251,7 +230,6 @@ fn rayon_directory_contents(
     source_contents: &str,
     _: bool,
 ) -> () {
-
     let dir: Vec<PathBuf> = if !config.parent_dir {
         get_source_files(&config.dir, extension)
     } else {
@@ -273,11 +251,9 @@ fn rayon_directory_contents(
         );
         write_file(&p, &replacements);
     })
-
 }
 
 fn write_file<P: AsRef<Path> + Debug>(p: P, s: &str) -> () {
-
     let mut file = match File::create(&p) {
         Ok(x) => x,
         _ => {
@@ -292,11 +268,9 @@ fn write_file<P: AsRef<Path> + Debug>(p: P, s: &str) -> () {
             exit(0x0001)
         }
     }
-
 }
 
 fn read_file<P: AsRef<Path> + Debug>(p: P) -> String {
-
     let mut file = match File::open(&p) {
         Ok(x) => x,
         _ => {
@@ -340,7 +314,6 @@ fn trim_matches_only<'a>(name_str: &'a mut str, old_str: &'a [String]) -> (Strin
     (default_name, extn)
 }
 
-
 fn replace_all(
     config: &ProjectOwned,
     old_module: &str,
@@ -348,7 +321,6 @@ fn replace_all(
     source_contents: &str,
     benchmark_mode: bool,
 ) -> () {
-
     let module_ext: &Vec<String> = &config.module_extension;
     let config_ext: &str = &config.config_extension;
 
@@ -385,8 +357,8 @@ fn replace_all(
     let in_config_file = (&contents).contains(old_module);
 
     // TODO purescript thing doesn't actually get moved??
-    if !in_config_file && !config.config_extension.ends_with(".json") &&
-        !config.config_extension.ends_with(".yaml")
+    if !in_config_file && !config.config_extension.ends_with(".json")
+        && !config.config_extension.ends_with(".yaml")
     {
         eprintln!(
             "{}: module '{}' not found in your config file '{}'",
@@ -461,7 +433,6 @@ fn replace_all(
     };
 
     if config.copy {
-
         let mut file_name: PathBuf = (&config).dir.to_owned();
 
         // FIXME don't hard-code this.
@@ -481,7 +452,6 @@ fn replace_all(
             module_ext,
             false,
         );
-
     }
 
     if let Ok(s) = expr {
@@ -498,7 +468,6 @@ fn replace_all(
 
     // step 6: clean up any now-spurious directories
     clean_empty_dirs(&config.dir);
-
 }
 
 fn git_stash(src_dir: &str) -> () {
@@ -526,7 +495,6 @@ fn main() {
         .setting(AppSettings::SubcommandRequired)
         .get_matches();
     if let Some(x) = matches.subcommand_matches("update") {
-
         let force = x.is_present("force");
 
         println!("current version: {}", crate_version!());
@@ -537,16 +505,16 @@ fn main() {
             "curl -LSfs https://japaric.github.io/trust/install.sh | sh -s -- --git vmchale/hask-replace"
         };
 
-        let script = Command::new("bash").arg("-c").arg(s).output().expect(
-            "failed to execute update script.",
-        );
+        let script = Command::new("bash")
+            .arg("-c")
+            .arg(s)
+            .output()
+            .expect("failed to execute update script.");
 
         let script_string = String::from_utf8(script.stderr).unwrap();
 
         println!("{}", script_string);
-
     } else if let Some(command) = matches.subcommand_matches("module") {
-
         let dir_string = get_dir(command.value_of("project"));
 
         let dir = PathBuf::from(dir_string);
@@ -592,9 +560,7 @@ fn main() {
                 benchmark,
             );
         }
-
     } else if let Some(command) = matches.subcommand_matches("rename") {
-
         let dir_string = get_dir(command.value_of("project"));
 
         let dir = PathBuf::from(dir_string);
@@ -612,9 +578,7 @@ fn main() {
         }
 
         replace_all(&config_project, old_config, new_config, "Cabal", false);
-
     } else if let Some(command) = matches.subcommand_matches("idris") {
-
         let dir_string = get_dir(command.value_of("project"));
 
         let dir = PathBuf::from(dir_string);
@@ -632,9 +596,7 @@ fn main() {
         }
 
         replace_all(&config_project, old_module, new_module, "Idris", false);
-
     } else if let Some(command) = matches.subcommand_matches("elm") {
-
         let dir_string = get_dir(command.value_of("project"));
 
         let dir = PathBuf::from(dir_string);
@@ -652,9 +614,7 @@ fn main() {
         }
 
         replace_all(&config_project, old_module, new_module, "Elm", false);
-
     } else if let Some(command) = matches.subcommand_matches("purescript") {
-
         let dir_string = get_dir(command.value_of("project"));
 
         let dir = PathBuf::from(dir_string);
@@ -672,7 +632,6 @@ fn main() {
         }
 
         replace_all(&config_project, old_module, new_module, "PureScript", false);
-
     } else {
         eprintln!("{}: failed to supply a subcommand", "Error".red());
     }
