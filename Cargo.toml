@@ -14,6 +14,7 @@ name = "hr"
 path = "src/main.rs"
 
 [dependencies]
+smallvec = "0.6.0"
 colored = "1.5.2"
 rayon = "1.0"
 walkdir = "1.0.7"

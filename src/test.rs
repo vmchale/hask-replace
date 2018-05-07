@@ -17,12 +17,14 @@ fn all<T>(input: IResult<&str, T, u32>) -> T {
 }
 
 fn read_file(file_name: &str) -> String {
-
     let mut file = File::open(file_name).unwrap();
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
     contents
+}
 
+fn alex() -> String {
+    read_file("data/alex/Lexer.x")
 }
 
 fn sig() -> String {
@@ -47,6 +49,20 @@ fn project() -> String {
 
 fn cabal() -> String {
     read_file("data/cata/cata.cabal")
+}
+
+#[test]
+fn test_alex() {
+    let alex_str = concat_str(all(parse_full(
+        &alex(),
+        "Language.Dhall.Lexer",
+        "Language.Dhall.Lexer.",
+        "Dhall.Lexer",
+        "Dhall.Lexer.",
+        "L-{",
+    )));
+    println!("{}", alex_str);
+    assert_eq!(1, 1);
 }
 
 #[test]
@@ -87,8 +103,8 @@ fn test_exposed_modules() {
 
 #[test]
 fn test_signature_names() {
-    let expected = "signature NewSig ( function ) where\n\nfunction :: (Num a) => [a] -> a\n"
-        .to_string();
+    let expected =
+        "signature NewSig ( function ) where\n\nfunction :: (Num a) => [a] -> a\n".to_string();
     assert_eq!(
         concat_str(all(parse_full(
             &sig(),

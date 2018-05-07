@@ -1,9 +1,34 @@
 extern crate colored;
+extern crate smallvec;
 
 use utils::*;
-use nom::{rest_s, IResult, space, line_ending};
+use nom::{line_ending, rest_s, space, IResult};
 use std::process::exit;
 use self::colored::*;
+use self::smallvec::SmallVec;
+use std::path::Path;
+
+pub struct Version {
+    pub version: SmallVec<[u16; 4]>,
+}
+
+pub struct PackageIdentifier<'a> {
+    pub pkg_name: &'a str,
+    pub pkg_version: Version,
+}
+
+pub enum License<'a> {
+    GPL { version: Option<Version> },
+    UnknownLicense { name: Option<&'a str> },
+}
+
+pub struct PackageDescription<'a> {
+    pub pkg_identifier: PackageIdentifier<'a>,
+    pub name: Option<&'a str>,
+    pub version: Option<Version>,
+    pub license: Option<&'a str>,
+    pub license_files: Vec<&'a Path>,
+}
 
 pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name: &str) -> T {
     match input {
@@ -17,7 +42,7 @@ pub fn handle_errors<T>(input: IResult<&str, T, u32>, file_type: &str, file_name
                 e,
             );
             exit(0x001)
-        } // FIXME 
+        } // FIXME
     }
 }
 
