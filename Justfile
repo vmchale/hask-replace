@@ -19,8 +19,9 @@ bench:
     bench "./target/release/hr module lens-4.16 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"
     @rm -rf lens-4.16 haskell-src-exts-1.19.1
 
-#@git clone https://github.com/haskell/cabal && cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all
 packages:
+    @rm -rf cabal
+    @git clone https://github.com/haskell/cabal && cd cabal && cargo run -- m . Distribution.Backpack Distribution.FannyPack && cabal new-build all
     @rm -rf purescript-matryoshka
     @git clone https://github.com/slamdata/purescript-matryoshka.git
     cd purescript-matryoshka && cargo run -- p . Matryoshka.DistributiveLaw Matryoshka.DL && npm install && bower install && npm run -s build && npm run -s test

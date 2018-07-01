@@ -17,7 +17,7 @@ path = "src/main.rs"
 smallvec = "0.6.0"
 colored = "1.5.2"
 rayon = "1.0"
-walkdir = "1.0.7"
+walkdir = "2.0"
 nom = { git = "https://github.com/vmchale/nom", features = [ "default" ] }
 
 [dependencies.clap]
