@@ -1,5 +1,5 @@
 pub fn from_vec<T>(x: Option<Vec<T>>) -> Vec<T> {
-    x.unwrap_or(vec![])
+    x.unwrap_or_else(|| vec![])
 }
 
 pub trait AsString {

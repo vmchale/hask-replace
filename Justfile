@@ -23,12 +23,6 @@ packages:
     @git clone https://github.com/HuwCampbell/idris-lens.git
     cd idris-lens && cargo run -- idris . Control.Lens.Maths Control.Lens.Math && idris --build lens.ipkg
     @rm -rf idris-lens
-    @cabal unpack language-lua
-    cargo run -- module language-lua-0.11.0 Language.Lua.Annotated.Parser Language.Lua.Annotate.ParserAgain && cd language-lua-0.11.0 && cabal new-build
-    @rm -rf language-lua-*
-    @cabal unpack dhall
-    cargo run -- module dhall-1.15.1 "Dhall.Import" "Dhall.Dependencies" && cd dhall-1.15.1 && cabal new-build
-    @rm -rf dhall-*
     @cabal unpack lens
     cd lens-4.17 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build
     @rm -rf lens-*

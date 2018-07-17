@@ -1,3 +1,5 @@
+#![allow(many_single_char_names)]
+
 #[macro_use]
 extern crate nom;
 
