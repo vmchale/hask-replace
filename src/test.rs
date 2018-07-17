@@ -1,12 +1,11 @@
 #![allow(unused_imports)]
 #![allow(dead_code)]
 #[cfg(test)]
-
 use cabal::*;
 use hask::*;
+use nom::IResult;
 use std::fs::File;
 use std::io::prelude::*;
-use nom::IResult;
 use utils::*;
 
 fn all<T>(input: IResult<&str, T, u32>) -> T {

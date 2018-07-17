@@ -1,12 +1,12 @@
 extern crate colored;
 extern crate smallvec;
 
-use utils::*;
-use nom::{line_ending, rest_s, space, IResult};
-use std::process::exit;
 use self::colored::*;
 use self::smallvec::SmallVec;
+use nom::{line_ending, rest_s, space, IResult};
 use std::path::Path;
+use std::process::exit;
+use utils::*;
 
 pub struct Version {
     pub version: SmallVec<[u16; 4]>,

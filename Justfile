@@ -41,16 +41,10 @@ packages:
     @cabal unpack lens
     cd lens-4.16 && cargo run -- module . "Control.Lens.Internal" "Control.Lens.Mine" --copy && cabal new-build -w ghc-8.2.2
     @rm -rf lens-4.16
-    @git clone https://github.com/debois/elm-mdl
-    cd elm-mdl && cargo run -- elm . Material.Options.Internal Material.Options.Mod && elm-make --yes
-    @rm -rf elm-mdl/
     @rm -rf lens-* idris-lens dhall-* language-lua-* purescript-matryoshka futhark cabal
 
 test:
     @rm -rf nothing
-    @pi new elm nothing
-    cargo run -- elm nothing "Update" "Update.Nested.Mod"
-    cd nothing && elm-make src/main.elm --yes
     @rm -rf nothing/ test-nothing
     @pi new haskell test-nothing
     cargo run -- module test-nothing "Lib" "NewLib.Nested"

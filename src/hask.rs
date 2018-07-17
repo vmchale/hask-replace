@@ -1,7 +1,7 @@
 // use nom::multispace;
 use cabal::*;
+use nom::{hex_digit, space};
 use utils::*;
-use nom::{space, hex_digit};
 
 // opinionated find-and-replace
 // we know already that monadic parser combinators work well.
@@ -15,7 +15,6 @@ pub fn parse_haskell(
     old: &str,
     new: &str,
 ) -> String {
-
     // this is less stupid than it looks because nom parses by byte.
     let special = ("-{\"'".to_string() + &old[0..1]).to_string();
 
@@ -31,7 +30,6 @@ pub fn parse_haskell(
         file_type,
         file_name,
     ))
-
 }
 
 // skip comment
@@ -85,7 +83,6 @@ named!(parens<&str, ()>,
     (())
   )
 );
-
 
 named_args!(parse_import_list<'a>(old: &'a str, new: &'a str)<&'a str, Vec<&'a str>>,
   do_parse!(

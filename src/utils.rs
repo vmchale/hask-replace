@@ -58,5 +58,9 @@ pub fn concat_str(xs: Vec<&str>) -> String {
 }
 
 pub fn swap_module<'a>(old: &'a str, new: &'a str, candidate: &'a str) -> &'a str {
-    if candidate == old { new } else { candidate }
+    if candidate == old {
+        new
+    } else {
+        candidate
+    }
 }

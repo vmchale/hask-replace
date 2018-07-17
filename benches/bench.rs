@@ -1,16 +1,16 @@
 #![feature(test)]
 #![allow(unused_imports)]
 
-extern crate test;
 extern crate hreplace;
 extern crate nom;
+extern crate test;
 
-use nom::IResult;
 use hreplace::cabal::parse_all;
 use hreplace::hask::parse_full;
-use test::test::Bencher;
+use nom::IResult;
 use std::fs::File;
 use std::io::prelude::*;
+use test::test::Bencher;
 
 #[bench]
 fn bench_cabal(b: &mut Bencher) {
@@ -30,12 +30,7 @@ fn bench_hask_everything(b: &mut Bencher) {
     let string = hask();
     b.iter(|| {
         concat_str(all(parse_full(
-            &string,
-            "Mod",
-            "Mod.",
-            "NewMod",
-            "NewMod.",
-            "M-{",
+            &string, "Mod", "Mod.", "NewMod", "NewMod.", "M-{",
         )))
     })
 }
@@ -52,12 +47,10 @@ fn all<T>(input: IResult<&str, T, u32>) -> T {
 }
 
 fn read_file(file_name: &str) -> String {
-
     let mut file = File::open(file_name).unwrap();
     let mut contents = String::new();
     file.read_to_string(&mut contents).unwrap();
     contents
-
 }
 
 fn cabal() -> String {

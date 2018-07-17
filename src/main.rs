@@ -5,20 +5,20 @@ extern crate hreplace;
 extern crate rayon;
 extern crate walkdir;
 
-use std::fs;
-use rayon::prelude::*;
 use clap::{App, AppSettings};
-use std::path::PathBuf;
-use walkdir::WalkDir;
-use std::process::exit;
 use colored::*;
-use std::fs::{read_dir, remove_dir, File};
-use std::io::prelude::*;
-use std::process::Command;
-use std::path::Path;
-use std::fmt::Debug;
 use hreplace::cabal::parse_cabal;
 use hreplace::hask::parse_haskell;
+use rayon::prelude::*;
+use std::fmt::Debug;
+use std::fs;
+use std::fs::{read_dir, remove_dir, File};
+use std::io::prelude::*;
+use std::path::Path;
+use std::path::PathBuf;
+use std::process::exit;
+use std::process::Command;
+use walkdir::WalkDir;
 
 #[derive(Debug)]
 struct ProjectOwned {
@@ -52,10 +52,9 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
         (!path.to_string_lossy().to_string().contains(".stack-work"))
             && (!path.to_string_lossy().to_string().contains("dist")) && {
             let p_str = path.to_string_lossy().to_string();
-            (find.into_iter()
-                .fold(false, |bool_accumulator, string_ext| {
-                    bool_accumulator || p_str.ends_with(string_ext)
-                }))
+            (find
+                .into_iter()
+                .any(|string_ext| p_str.ends_with(string_ext)))
         }
     });
 
@@ -86,13 +85,14 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
         );
         exit(0x0001)
     } else if vec_len > 1 && config_ext == ".cabal" {
-        let config_name = vec.into_iter()
+        let config_name = vec
+            .into_iter()
             .filter(|p| p.to_string_lossy().ends_with("Cabal.cabal"))
             .collect::<Vec<PathBuf>>()
             .pop()
             .unwrap();
         ProjectOwned {
-            copy: copy,
+            copy,
             dir: PathBuf::from(s),
             parent_dir: true,
             config_file: { config_name },
@@ -101,7 +101,7 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
         }
     } else if vec_len == 0 {
         ProjectOwned {
-            copy: copy,
+            copy,
             dir: parent.to_path_buf(),
             parent_dir: false,
             config_file: p.clone(),
@@ -109,13 +109,14 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
             config_extension: config_ext.to_string(),
         }
     } else {
-        let config_name = vec.into_iter()
+        let config_name = vec
+            .into_iter()
             .filter(|p| p.to_string_lossy() != "test.ipkg")
             .collect::<Vec<PathBuf>>()
             .pop()
             .unwrap();
         ProjectOwned {
-            copy: copy,
+            copy,
             dir: PathBuf::from(s),
             parent_dir: false,
             config_file: { config_name },
@@ -137,7 +138,7 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
     let s = p.to_string_lossy().to_string();
     let dir = WalkDir::new(s).into_iter();
 
-    let _ = dir.filter_map(|e| e.ok())
+    dir.filter_map(|e| e.ok())
         .filter(|x| {
             x.file_type().is_dir()
                 && read_dir(x.path())
@@ -146,7 +147,7 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
         })
         .for_each(|p| {
             let intermediate = remove_dir(p.path());
-            let _ = match intermediate {
+            match intermediate {
                 Ok(y) => y,
                 Err(_) => eprintln!(
                     "{}: failed to clean up leftover directories.",
@@ -172,9 +173,7 @@ fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
             let p_str = p.file_name().to_string_lossy().to_string();
             extension
                 .into_iter()
-                .fold(false, |bool_accumulator, string_ext| {
-                    bool_accumulator || p_str.ends_with(string_ext)
-                })
+                .any(|string_ext| p_str.ends_with(string_ext))
         }
     });
 
@@ -299,7 +298,7 @@ fn trim_matches_only<'a>(name_str: &'a mut str, old_str: &'a [String]) -> (Strin
             default_name = name_str.trim_right_matches(p).to_string();
         }
     }
-    if default == "".to_string() && default_name == "".to_string() {
+    if default == "" && default_name == "" {
         for p in old_str {
             if name_str.replace(".hs", ".y").ends_with(p) {
                 default = p.replace(".hs", ".y").to_string();
@@ -357,7 +356,8 @@ fn replace_all(
     let in_config_file = (&contents).contains(old_module);
 
     // TODO purescript thing doesn't actually get moved??
-    if !in_config_file && !config.config_extension.ends_with(".json")
+    if !in_config_file
+        && !config.config_extension.ends_with(".json")
         && !config.config_extension.ends_with(".yaml")
     {
         eprintln!(
@@ -416,11 +416,12 @@ fn replace_all(
 
     // step 5: move the actual file
     let mut new_module_path = src_dir;
-    new_module_path.push_str(&module_to_file_names(new_module, module_ext)
-        .into_iter()
-        .filter(|p| p.ends_with(&extn))
-        .next()
-        .unwrap());
+    new_module_path.push_str(
+        &module_to_file_names(new_module, module_ext)
+            .into_iter()
+            .find(|p| p.ends_with(&extn))
+            .unwrap(),
+    );
     if Path::new(&new_module_path).exists() && !benchmark_mode {
         eprintln!("{}: destination module already exists.", "Error".red());
         exit(0x0001);
@@ -433,7 +434,7 @@ fn replace_all(
     };
 
     if config.copy {
-        let mut file_name: PathBuf = (&config).dir.to_owned();
+        let mut file_name: PathBuf = (&config.dir).to_owned();
 
         // FIXME don't hard-code this.
         file_name.push("src/");
@@ -488,6 +489,7 @@ fn git_stash(src_dir: &str) -> () {
     }
 }
 
+#[allow(print_literal)]
 fn main() {
     let yaml = load_yaml!("options-en.yml");
     let matches = App::from_yaml(yaml)
