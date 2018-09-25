@@ -1,4 +1,6 @@
-#![allow(many_single_char_names)]
+#![feature(tool_lints)]
+#![allow(clippy::many_single_char_names)]
+#![allow(clippy::double_parens)]
 
 #[macro_use]
 extern crate nom;

@@ -10,10 +10,10 @@ check:
     git diff master origin/master
 
 bench:
-    @rm -rf dhall-1.15.1
+    @rm -rf dhall-1.17.0
     @cabal unpack dhall
     @cargo build --release
-    bench "./target/release/hr module dhall-1.15.1 'Dhall.Import' 'Dhall.Import' --benchmark-mode"
+    bench "./target/release/hr module dhall-1.17.0 'Dhall.Import' 'Dhall.Import' --benchmark-mode"
     @rm -rf dhall-1.15.1 lens-4.17
     @cabal unpack lens
     bench "./target/release/hr module lens-4.17 'Control.Lens.Internal' 'Control.Lens.Internal' --benchmark-mode"

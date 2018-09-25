@@ -1,3 +1,5 @@
+#![feature(tool_lints)]
+
 #[macro_use]
 extern crate clap;
 extern crate colored;
@@ -50,12 +52,13 @@ fn find_by_end_vec(p: &PathBuf, find: &[String], depth: Option<usize>) -> Vec<Pa
     let iter = dir.into_iter().filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
         (!path.to_string_lossy().to_string().contains(".stack-work"))
-            && (!path.to_string_lossy().to_string().contains("dist")) && {
-            let p_str = path.to_string_lossy().to_string();
-            (find
-                .into_iter()
-                .any(|string_ext| p_str.ends_with(string_ext)))
-        }
+            && (!path.to_string_lossy().to_string().contains("dist"))
+            && {
+                let p_str = path.to_string_lossy().to_string();
+                (find
+                    .into_iter()
+                    .any(|string_ext| p_str.ends_with(string_ext)))
+            }
     });
 
     let vec: Vec<PathBuf> = iter.map(|x| x.path().to_path_buf()).collect();
@@ -141,11 +144,8 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
     dir.filter_map(|e| e.ok())
         .filter(|x| {
             x.file_type().is_dir()
-                && read_dir(x.path())
-                    .map(|inner| inner.into_iter().count())
-                    .unwrap_or(0) == 0
-        })
-        .for_each(|p| {
+                && read_dir(x.path()).map(|inner| inner.count()).unwrap_or(0) == 0
+        }).for_each(|p| {
             let intermediate = remove_dir(p.path());
             match intermediate {
                 Ok(y) => y,
@@ -169,12 +169,13 @@ fn get_source_files(p: &PathBuf, extension: &[String]) -> Vec<PathBuf> {
     let filtered = dir.filter_map(|e| e.ok()).filter(|p| {
         let path = p.path();
         (!path.to_string_lossy().to_string().contains(".stack-work"))
-            && (!path.to_string_lossy().to_string().contains("dist")) && {
-            let p_str = p.file_name().to_string_lossy().to_string();
-            extension
-                .into_iter()
-                .any(|string_ext| p_str.ends_with(string_ext))
-        }
+            && (!path.to_string_lossy().to_string().contains("dist"))
+            && {
+                let p_str = p.file_name().to_string_lossy().to_string();
+                extension
+                    .into_iter()
+                    .any(|string_ext| p_str.ends_with(string_ext))
+            }
     });
 
     filtered.map(|p| p.path().to_path_buf()).collect()
@@ -192,8 +193,7 @@ fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
         .map(|mut x| {
             x.push_str(extension_iter.next().unwrap());
             x
-        })
-        .collect::<Vec<String>>();
+        }).collect::<Vec<String>>();
     // println!("{:?}", new_vec);
     new_vec
 }
@@ -489,7 +489,7 @@ fn git_stash(src_dir: &str) -> () {
     }
 }
 
-#[allow(print_literal)]
+#[allow(clippy::print_literal)]
 fn main() {
     let yaml = load_yaml!("options-en.yml");
     let matches = App::from_yaml(yaml)
