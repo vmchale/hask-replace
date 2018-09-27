@@ -107,7 +107,7 @@ fn get_config(p: &PathBuf, module_ext: &[String], config_ext: &str, copy: bool) 
             copy,
             dir: parent.to_path_buf(),
             parent_dir: false,
-            config_file: p.clone(),
+            config_file: p.to_path_buf(),
             module_extension: module_ext.to_owned(),
             config_extension: config_ext.to_string(),
         }
@@ -145,7 +145,8 @@ fn clean_empty_dirs(p: &PathBuf) -> () {
         .filter(|x| {
             x.file_type().is_dir()
                 && read_dir(x.path()).map(|inner| inner.count()).unwrap_or(0) == 0
-        }).for_each(|p| {
+        })
+        .for_each(|p| {
             let intermediate = remove_dir(p.path());
             match intermediate {
                 Ok(y) => y,
@@ -193,7 +194,8 @@ fn module_to_file_names(module: &str, extension: &[String]) -> Vec<String> {
         .map(|mut x| {
             x.push_str(extension_iter.next().unwrap());
             x
-        }).collect::<Vec<String>>();
+        })
+        .collect::<Vec<String>>();
     // println!("{:?}", new_vec);
     new_vec
 }
